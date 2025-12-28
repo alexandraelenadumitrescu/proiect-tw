@@ -1,20 +1,12 @@
 {
-  "name": "proiect-tw",
+  "name": "server",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/alexandraelenadumitrescu/proiect-tw.git"
-  },
+  "keywords": [],
   "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/alexandraelenadumitrescu/proiect-tw/issues"
-  },
-  "homepage": "https://github.com/alexandraelenadumitrescu/proiect-tw#readme",
-  "keywords": []
+  "license": "ISC"
 }
