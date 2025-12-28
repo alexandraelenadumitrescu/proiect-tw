@@ -1,0 +1,33 @@
+openapi: 3.0.0
+info:
+  title: API Management Conferinte
+  version: 1.0.0
+  description: Documentatie interactiva pentru Backend
+
+servers:
+  - url: http://localhost:5000
+    description: Server local de dezvoltare
+
+paths:
+  /api/login:
+    post:
+      summary: Autentificare utilizator
+      description: Trimite datele de login pentru a primi un token sau confirmarea accesului.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: "user@conferinta.ro"
+                password:
+                  type: string
+                  example: "parola123"
+      responses:
+        '200':
+          description: Login reusit
+        '401':
+          description: Date invalide (email sau parola gresite)
