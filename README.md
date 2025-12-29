@@ -25,6 +25,12 @@ Aplicatie web pentru gestionarea conferintelor, realizata cu React (Frontend) si
 - **Backend:** Node.js, Express, Cors, Dotenv.
 - **Stil si Calitate:** ESLint, Prettier.
 
+## 🌳 Branch Strategy
+### Workflow: 
+1. **Development:** Lucrați pe `feature/*` branches
+2. **Integration:** Merge în `develop` prin Pull Request
+3. **Release:** Când `develop` e stabil → merge în `main`
+
 ## Documentatie API
 Proiectul foloseste Swagger pentru documentarea si testarea endpoint-urilor.
 - Dupa ce porniti serverul de backend (`npm run dev`), accesati:
