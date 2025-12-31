@@ -26,6 +26,7 @@ app.get('/', (req, res) => {
     documentation: `http://localhost:${PORT}/api-docs`,
   });
 });
+//modificare cale pe port ca npm run dev sa nu duca in json ci in front
 
 app.use('/api/auth', authRoutes);
 app.use(notFound);
