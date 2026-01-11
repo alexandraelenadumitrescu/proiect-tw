@@ -11,12 +11,12 @@ exports.getRolesForUser = async (req, res) => {
       where: { user_id: Number(userId) },
       select: { role_type: true },
     });
-    res.status(200).json(roles.map(r => r.role_type));
+    res.status(200).json(roles.map((r) => r.role_type));
   } catch (error) {
     console.error('Error fetching roles for user:', error);
     res.status(500).json({ error: 'Failed to fetch user roles' });
   }
-}
+};
 
 exports.assignRoleToUser = async (req, res) => {
   const userId = req.params.userId;
@@ -36,7 +36,7 @@ exports.assignRoleToUser = async (req, res) => {
       where: { user_id: Number(userId) },
       select: { role_type: true },
     });
-    const currentRoleTypes = currentRoles.map(r => r.role_type);
+    const currentRoleTypes = currentRoles.map((r) => r.role_type);
 
     // Check if user already has the requested role
     if (currentRoleTypes.includes(requestedRole)) {

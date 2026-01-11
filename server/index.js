@@ -9,6 +9,7 @@ require('dotenv').config(); //incarca variabilele din .env
 
 const usersController = require('./controllers/usersController');
 const registrationController = require('./controllers/registrationController');
+const loginController = require('./controllers/loginController');
 const rolesController = require('./controllers/rolesController');
 
 const app = express();
@@ -21,6 +22,7 @@ const PORT = process.env.PORT || 6666;
 
 app.get('/users', usersController.getUsers);
 
+app.post('/login', loginController.loginUser);
 app.post('/register', registrationController.registerUser);
 
 app.get('/users/:userId/roles', rolesController.getRolesForUser);
