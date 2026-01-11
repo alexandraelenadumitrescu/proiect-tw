@@ -40,6 +40,12 @@ app.post(
   requireRole(ORGANIZER_ROLE),
   conferencesController.createConference
 );
+app.post(
+  '/conferences/:conferenceId/allocate-reviewer',
+  authenticateToken,
+  requireRole(ORGANIZER_ROLE),
+  conferencesController.allocateReviewerToConference
+);
 
 app.get('/', (req, res) => {
   res.send('Serverul backend functioneaza corect!');
