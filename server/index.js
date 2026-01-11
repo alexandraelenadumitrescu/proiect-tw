@@ -11,6 +11,12 @@ const usersController = require('./controllers/usersController');
 const registrationController = require('./controllers/registrationController');
 const loginController = require('./controllers/loginController');
 const rolesController = require('./controllers/rolesController');
+const conferencesController = require('./controllers/conferencesController');
+
+const { authenticateToken } = require('./middleware/loginUser');
+const requireRole = require('./middleware/requireRole');
+
+const { ORGANIZER_ROLE } = require('./constants/roles');
 
 const app = express();
 
@@ -27,6 +33,13 @@ app.post('/register', registrationController.registerUser);
 
 app.get('/users/:userId/roles', rolesController.getRolesForUser);
 app.post('/users/:userId/roles', rolesController.assignRoleToUser);
+
+app.post(
+  '/conferences',
+  authenticateToken,
+  requireRole(ORGANIZER_ROLE),
+  conferencesController.createConference
+);
 
 app.get('/', (req, res) => {
   res.send('Serverul backend functioneaza corect!');
