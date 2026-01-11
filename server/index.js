@@ -9,6 +9,7 @@ require('dotenv').config(); //incarca variabilele din .env
 
 const usersController = require('./controllers/usersController');
 const registrationController = require('./controllers/registrationController');
+const rolesController = require('./controllers/rolesController');
 
 const app = express();
 
@@ -21,6 +22,9 @@ const PORT = process.env.PORT || 6666;
 app.get('/users', usersController.getUsers);
 
 app.post('/register', registrationController.registerUser);
+
+app.get('/users/:userId/roles', rolesController.getRolesForUser);
+app.post('/users/:userId/roles', rolesController.assignRoleToUser);
 
 app.get('/', (req, res) => {
   res.send('Serverul backend functioneaza corect!');
