@@ -22,10 +22,10 @@ paths:
               properties:
                 email:
                   type: string
-                  example: "user@conferinta.ro"
+                  example: 'user@conferinta.ro'
                 password:
                   type: string
-                  example: "parola123"
+                  example: 'parola123'
       responses:
         '200':
           description: Login reusit
