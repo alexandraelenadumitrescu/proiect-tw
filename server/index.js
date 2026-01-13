@@ -17,7 +17,7 @@ const papersController = require('./controllers/papersController');
 const { authenticateToken } = require('./middleware/loginUser');
 const requireRole = require('./middleware/requireRole');
 
-const { ORGANIZER_ROLE, AUTHOR_ROLE } = require('./constants/roles');
+const { ORGANIZER_ROLE, AUTHOR_ROLE, REVIEWER_ROLE } = require('./constants/roles');
 
 const app = express();
 
@@ -60,6 +60,13 @@ app.post(
   requireRole(AUTHOR_ROLE),
   papersController.submitPaper
 );
+
+app.post(
+  '/conferences/:conferenceId/papers/:paperId/approve',
+  authenticateToken,
+  requireRole(REVIEWER_ROLE),
+  papersController.approvePaper,
+)
 
 app.get('/', (req, res) => {
   res.send('Serverul backend functioneaza corect!');
