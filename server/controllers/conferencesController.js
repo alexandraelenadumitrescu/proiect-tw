@@ -97,3 +97,53 @@ exports.allocateReviewerToConference = async (req, res) => {
     res.status(500).json({ error: 'Failed to allocate reviewer to conference' });
   }
 };
+
+exports.joinConferenceAsAuthor = async (req, res) => {
+  try {
+    const conferenceId = req.params?.conferenceId;
+    const userId = req?.user?.id;
+
+    if (!conferenceId) {
+      return res.status(400).json({ message: 'Missing conferenceId parameter.' });
+    }
+
+    if (!userId) {
+      return res.status(401).json({ message: 'User not authenticated.' });
+    }
+
+    const conference = await prisma.conferences.findUnique({
+      where: { id: Number(conferenceId) },
+      include: { conference_authors: true, conference_reviewers: true },
+    });
+
+    if (!conference) {
+      return res.status(404).json({ message: 'Conference not found.' });
+    }
+
+    if (conference.organizer_id === userId) {
+      return res
+        .status(400)
+        .json({ message: 'Organizer cannot join as author in their own conference.' });
+    }
+
+    if (conference.conference_authors.map(ao => ao.author_id).includes(userId)) {
+      return res.status(400).json({ message: 'User is already an author in this conference.' });
+    }
+
+    if (conference.conference_reviewers.map(cr => cr.reviewer_id).includes(userId)) {
+      return res
+        .status(400)
+        .json({ message: 'User cannot be both author and reviewer in the same conference.' });
+    }
+
+    await prisma.conference_authors.create({
+      data: {
+        conference_id: conference.id,
+        author_id: userId,
+      },
+    });
+    return res.status(200).json({ message: 'Joined conference as author successfully.' });
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error.', error: error.message });
+  }
+};

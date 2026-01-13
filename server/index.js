@@ -16,7 +16,7 @@ const conferencesController = require('./controllers/conferencesController');
 const { authenticateToken } = require('./middleware/loginUser');
 const requireRole = require('./middleware/requireRole');
 
-const { ORGANIZER_ROLE } = require('./constants/roles');
+const { ORGANIZER_ROLE, AUTHOR_ROLE } = require('./constants/roles');
 
 const app = express();
 
@@ -45,6 +45,12 @@ app.post(
   authenticateToken,
   requireRole(ORGANIZER_ROLE),
   conferencesController.allocateReviewerToConference
+);
+app.post(
+  '/conferences/:conferenceId/join-as-author',
+  authenticateToken,
+  requireRole(AUTHOR_ROLE),
+  conferencesController.joinConferenceAsAuthor
 );
 
 app.get('/', (req, res) => {
