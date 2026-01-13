@@ -19,12 +19,13 @@ model conference_authors {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model conference_reviewers {
-  id            Int         @id @default(autoincrement())
-  conference_id Int
-  reviewer_id   Int
-  created_at    DateTime    @default(now()) @db.Timestamptz(6)
-  conferences   conferences @relation(fields: [conference_id], references: [id], onDelete: Cascade)
-  users         users       @relation(fields: [reviewer_id], references: [id], onDelete: Cascade)
+  id              Int               @id @default(autoincrement())
+  conference_id   Int
+  reviewer_id     Int
+  created_at      DateTime          @default(now()) @db.Timestamptz(6)
+  conferences     conferences       @relation(fields: [conference_id], references: [id], onDelete: Cascade)
+  users           users             @relation(fields: [reviewer_id], references: [id], onDelete: Cascade)
+  paper_reviewers paper_reviewers[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -41,13 +42,13 @@ model conferences {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model paper_reviewers {
-  id          Int       @id @default(autoincrement())
-  paper_id    Int
-  reviewer_id Int
-  created_at  DateTime  @default(now()) @db.Timestamptz(6)
-  papers      papers    @relation(fields: [paper_id], references: [id], onDelete: Cascade)
-  users       users     @relation(fields: [reviewer_id], references: [id], onDelete: Cascade)
-  reviews     reviews[]
+  id                           Int                  @id @default(autoincrement())
+  paper_id                     Int
+  conference_reviewer_entry_id Int
+  created_at                   DateTime             @default(now()) @db.Timestamptz(6)
+  conference_reviewers         conference_reviewers @relation(fields: [conference_reviewer_entry_id], references: [id], onDelete: Cascade)
+  papers                       papers               @relation(fields: [paper_id], references: [id], onDelete: Cascade)
+  reviews                      reviews[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -78,15 +79,14 @@ model papers {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model reviews {
-  id                Int              @id @default(autoincrement())
-  paper_id          Int
-  reviewer_id       Int?
-  for_paper_version Int
-  decision          String           @db.VarChar
-  comments          String?
-  created_at        DateTime         @default(now()) @db.Timestamptz(6)
-  papers            papers           @relation(fields: [paper_id], references: [id], onDelete: Cascade)
-  paper_reviewers   paper_reviewers? @relation(fields: [reviewer_id], references: [id], onDelete: Cascade)
+  id                      Int              @id @default(autoincrement())
+  paper_version_id        Int
+  paper_reviewer_entry_id Int?
+  decision                String           @db.VarChar
+  comments                String?
+  created_at              DateTime         @default(now()) @db.Timestamptz(6)
+  paper_reviewers         paper_reviewers? @relation(fields: [paper_reviewer_entry_id], references: [id], onDelete: Cascade)
+  papers                  papers           @relation(fields: [paper_version_id], references: [id], onDelete: Cascade)
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -107,7 +107,6 @@ model users {
   conference_authors   conference_authors[]
   conference_reviewers conference_reviewers[]
   conferences          conferences[]
-  paper_reviewers      paper_reviewers[]
   papers               papers[]
   user_roles           user_roles[]
 }

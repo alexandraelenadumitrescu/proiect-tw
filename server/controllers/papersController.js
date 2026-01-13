@@ -2,12 +2,17 @@ const prisma = require('../config/shared.js');
 const multer = require('multer');
 const upload = multer();
 
-const { PAPER_STATUS_DEFAULT } = require('../constants/papers.js');
+const {
+  PAPER_STATUS_DEFAULT,
+  PAPER_STATUS_APPROVED,
+  PAPER_STATUS_AWAITING_APPROVAL,
+} = require('../constants/papers.js');
 const { PAPER_VERSIONS_DEFAULT_VERSION_NUMBER } = require('../constants/paperVersions.js');
 const {
   CONFERENCE_REVIEWERS_DEFAULT_NUMBER_OF_REVIEWERS_PER_PAPER,
 } = require('../constants/conferenceReviewers.js');
-const { MEGABYTE_IN_BYTES } = require('../constants/fileSizes.js')
+const { MEGABYTE_IN_BYTES } = require('../constants/fileSizes.js');
+const { REVIEW_DECISION_APPROVED } = require('../constants/reviews.js');
 
 const { pickNRandomElementsFromArray } = require('../utils/pickNRandomElementsFromArray.js');
 
@@ -94,15 +99,15 @@ exports.submitPaper = [
         });
 
         const randomReviewerUserIds = pickNRandomElementsFromArray(
-          conferenceReviewersUserIds,
+          conference.conference_reviewers.map((cr) => cr.id),
           CONFERENCE_REVIEWERS_DEFAULT_NUMBER_OF_REVIEWERS_PER_PAPER
         );
 
         await prisma.paper_reviewers.createMany({
-          data: randomReviewerUserIds.map((rruid) => {
+          data: randomReviewerUserIds((id) => {
             return {
               paper_id: paper.id,
-              reviewer_id: rruid,
+              conference_reviewer_entry_id: id,
             };
           }),
         });
@@ -117,3 +122,111 @@ exports.submitPaper = [
     }
   },
 ];
+
+exports.approvePaper = async (req, res) => {
+  try {
+    const conferenceId = req.params?.conferenceId;
+    const paperId = req.params?.paperId;
+
+    if (!conferenceId || !paperId) {
+      return res.status(400).json({ message: 'Missing conferenceId or paperId parameter.' });
+    }
+
+    const userId = req?.user?.id;
+
+    const { paperVersion } = req.body;
+
+    if (!paperVersion) {
+      return res.status(400).json({ message: 'Please provide a paper version' });
+    }
+
+    const conference = await prisma.conferences.findUnique({
+      where: { id: Number(conferenceId) },
+      include: {
+        conference_reviewers: {
+          where: {
+            reviewer_id: userId,
+            take: 1,
+          },
+        },
+        papers: {
+          where: { id: paperId },
+          take: 1,
+          include: {
+            paper_versions: {
+              where: {
+                version_number: Number(paperVersion),
+              },
+              take: 1,
+            },
+          },
+        },
+      },
+    });
+
+    console.log(conference);
+
+    if (!conference) {
+      return res
+        .status(400)
+        .json({ message: 'Provided conference id does not match any conference' });
+    }
+
+    if (conference.papers.length < 1) {
+      return res.status(400).json({ message: 'This conference has no papers' });
+    }
+
+    if (!conference.conference_reviewers.map((cr) => cr.reviewer_id).includes(userId)) {
+      return res.status(400).json({
+        message:
+          'You are not a reviewer in this conference. Please contact the conference organizer if you think this is wrong',
+      });
+    }
+
+    const result = await prisma.$transaction(async (prisma) => {
+      const review = await prisma.reviews.create({
+        data: {
+          reviewer_id: userId,
+          paper_version_id: conference.papers[0].paper_versions[0].id,
+          decision: REVIEW_DECISION_APPROVED,
+        },
+      });
+
+      const allPaperReviews = await prisma.reviews.findMany({
+        where: {
+          paper_version_id: conference.papers[0].paper_versions[0].id,
+        },
+      });
+
+      const didAllReviewersProvideADecision =
+        allPaperReviews.length === CONFERENCE_REVIEWERS_DEFAULT_NUMBER_OF_REVIEWERS_PER_PAPER;
+
+      if (!didAllReviewersProvideADecision) {
+        await prisma.papers.update({
+          where: { id: conference.papers[0].id },
+          data: {
+            status: PAPER_STATUS_AWAITING_APPROVAL,
+          },
+        });
+      }
+
+      const decisions = allPaperReviews.map((d) => d.decision);
+
+      if (decisions.all((d) => d === DECISION_APPROVED) && didAllReviewersProvideADecision) {
+        await prisma.papers.update({
+          where: { id: conference.papers[0].id },
+          data: {
+            status: PAPER_STATUS_APPROVED,
+          },
+        });
+      }
+
+      return { review };
+    });
+
+    const { review } = result;
+    return res.status(201).json({ review });
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error.', error: error.message });
+  }
+};
