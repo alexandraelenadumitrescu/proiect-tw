@@ -65,8 +65,8 @@ app.post(
   '/conferences/:conferenceId/papers/:paperId/approve',
   authenticateToken,
   requireRole(REVIEWER_ROLE),
-  papersController.approvePaper,
-)
+  papersController.approvePaper
+);
 
 app.get('/', (req, res) => {
   res.send('Serverul backend functioneaza corect!');

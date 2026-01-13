@@ -198,20 +198,33 @@ exports.approvePaper = async (req, res) => {
         message: 'You are not assigned as a reviewer for this paper.',
       });
     }
+    const relevantConferenceReviewer = await prisma.conference_reviewers.findFirst({
+      where: {
+        conference_id: conference.id,
+        reviewer_id: userId,
+      },
+      include: {
+        paper_reviewers: true,
+      },
+    });
+
+    const doesReviewAlreadyExist = await prisma.reviews.findFirst({
+      where: {
+        paper_reviewer_entry_id: relevantConferenceReviewer.paper_reviewers[0].id,
+        paper_version_id: conference.papers[0].paper_versions[0].id,
+      },
+    });
+
+    if (doesReviewAlreadyExist) {
+      return res
+        .status(400)
+        .json({
+          message:
+            'You have already submitted a review for this paper version. Please wait for your fellow reviewers to also submit their reviews, or for another version of the paper',
+        });
+    }
 
     const result = await prisma.$transaction(async (prisma) => {
-      const relevantConferenceReviewer = await prisma.conference_reviewers.findFirst({
-        where: {
-          conference_id: conference.id,
-          reviewer_id: userId,
-        },
-        include: {
-          paper_reviewers: true,
-        }
-      })
-
-      console.log(conference.papers[0]);
-
       const review = await prisma.reviews.create({
         data: {
           paper_reviewer_entry_id: relevantConferenceReviewer.paper_reviewers[0].id,
@@ -240,7 +253,10 @@ exports.approvePaper = async (req, res) => {
 
       const decisions = allPaperReviews.map((d) => d.decision);
 
-      if (decisions.every((d) => d === REVIEW_DECISION_APPROVED) && didAllReviewersProvideADecision) {
+      if (
+        decisions.every((d) => d === REVIEW_DECISION_APPROVED) &&
+        didAllReviewersProvideADecision
+      ) {
         await prisma.papers.update({
           where: { id: conference.papers[0].id },
           data: {
