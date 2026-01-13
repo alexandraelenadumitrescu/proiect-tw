@@ -68,7 +68,6 @@ model papers {
   conference_id   Int
   title           String            @db.VarChar
   status          String            @db.VarChar
-  current_version Int
   created_at      DateTime          @default(now()) @db.Timestamptz(6)
   paper_reviewers paper_reviewers[]
   paper_versions  paper_versions[]

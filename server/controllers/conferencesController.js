@@ -126,11 +126,11 @@ exports.joinConferenceAsAuthor = async (req, res) => {
         .json({ message: 'Organizer cannot join as author in their own conference.' });
     }
 
-    if (conference.conference_authors.map(ao => ao.author_id).includes(userId)) {
+    if (conference.conference_authors.map((ao) => ao.author_id).includes(userId)) {
       return res.status(400).json({ message: 'User is already an author in this conference.' });
     }
 
-    if (conference.conference_reviewers.map(cr => cr.reviewer_id).includes(userId)) {
+    if (conference.conference_reviewers.map((cr) => cr.reviewer_id).includes(userId)) {
       return res
         .status(400)
         .json({ message: 'User cannot be both author and reviewer in the same conference.' });

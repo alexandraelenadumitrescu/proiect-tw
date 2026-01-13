@@ -12,6 +12,7 @@ const registrationController = require('./controllers/registrationController');
 const loginController = require('./controllers/loginController');
 const rolesController = require('./controllers/rolesController');
 const conferencesController = require('./controllers/conferencesController');
+const papersController = require('./controllers/papersController');
 
 const { authenticateToken } = require('./middleware/loginUser');
 const requireRole = require('./middleware/requireRole');
@@ -32,7 +33,7 @@ app.post('/login', loginController.loginUser);
 app.post('/register', registrationController.registerUser);
 
 app.get('/users/:userId/roles', rolesController.getRolesForUser);
-app.post('/users/:userId/roles', rolesController.assignRoleToUser);
+app.post('/users/assign-roles-to-self', authenticateToken, rolesController.assignRoleToUser);
 
 app.post(
   '/conferences',
@@ -51,6 +52,13 @@ app.post(
   authenticateToken,
   requireRole(AUTHOR_ROLE),
   conferencesController.joinConferenceAsAuthor
+);
+
+app.post(
+  '/conferences/:conferenceId/submit-paper',
+  authenticateToken,
+  requireRole(AUTHOR_ROLE),
+  papersController.submitPaper
 );
 
 app.get('/', (req, res) => {

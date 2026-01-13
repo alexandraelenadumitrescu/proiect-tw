@@ -19,8 +19,12 @@ exports.getRolesForUser = async (req, res) => {
 };
 
 exports.assignRoleToUser = async (req, res) => {
-  const userId = req.params.userId;
+  const userId = req?.user?.id;
   const { role: requestedRole } = req.body;
+
+  if (!userId) {
+    return res.status(401).json({ error: 'You must be logged in to assign yourself a role' });
+  }
 
   if (!userId || !requestedRole) {
     return res.status(400).json({ error: 'Missing userId or role in request' });
