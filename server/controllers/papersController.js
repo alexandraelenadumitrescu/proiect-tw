@@ -6,13 +6,18 @@ const {
   PAPER_STATUS_DEFAULT,
   PAPER_STATUS_APPROVED,
   PAPER_STATUS_AWAITING_APPROVAL,
+  PAPER_STATUS_CHANGES_REQUESTED,
+  PAPER_STATUS_NOT_REVIEWED,
 } = require('../constants/papers.js');
 const { PAPER_VERSIONS_DEFAULT_VERSION_NUMBER } = require('../constants/paperVersions.js');
 const {
   CONFERENCE_REVIEWERS_DEFAULT_NUMBER_OF_REVIEWERS_PER_PAPER,
 } = require('../constants/conferenceReviewers.js');
 const { MEGABYTE_IN_BYTES } = require('../constants/fileSizes.js');
-const { REVIEW_DECISION_APPROVED } = require('../constants/reviews.js');
+const {
+  REVIEW_DECISION_APPROVED,
+  REVIEW_DECISION_CHANGES_REQUESTED,
+} = require('../constants/reviews.js');
 
 const { pickNRandomElementsFromArray } = require('../utils/pickNRandomElementsFromArray.js');
 
@@ -127,6 +132,114 @@ exports.submitPaper = [
   },
 ];
 
+exports.submitNewVersionOfPaper = [
+  upload.single('file'),
+  async (req, res) => {
+    try {
+      const conferenceId = req.params?.conferenceId;
+      const paperId = req.params?.paperId;
+
+      if (!conferenceId || !paperId) {
+        return res.status(400).json({ message: 'Missing conferenceId or paperId parameter.' });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded.' });
+      }
+
+      const conference = await prisma.conferences.findUnique({
+        where: { id: Number(conferenceId) },
+        include: {
+          conference_authors: true,
+          conference_reviewers: true,
+          papers: { include: { paper_versions: true } },
+        },
+      });
+
+      if (!conference) {
+        return res.status(404).json({ message: 'Conference not found.' });
+      }
+
+      const paper = conference.papers.find((p) => p.id === Number(paperId));
+
+      if (!paper) {
+        return res.status(404).json({ message: 'Paper not found in this conference.' });
+      }
+
+      if (paper.status !== PAPER_STATUS_CHANGES_REQUESTED) {
+        return res.status(400).json({
+          message: 'New versions can only be submitted for papers that have requested changes.',
+        });
+      }
+
+      // TODO: this is copy paste garbage trash, make this into a middleware
+      const conferenceAuthorsUserIds = conference.conference_authors.map((ca) => ca.author_id);
+      const conferenceReviewersUserIds = conference.conference_reviewers.map(
+        (cr) => cr.reviewer_id
+      );
+
+      const userId = req.user.id;
+
+      if (conferenceReviewersUserIds.includes(userId)) {
+        return res
+          .status(400)
+          .json({ message: 'Reviewers cannot submit papers to the same conference.' });
+      }
+
+      if (conferenceReviewersUserIds.length < 2) {
+        return res.status(400).json({
+          message:
+            'At least two reviewers must be allocated to the conference before submitting papers. Please contact the conference organizer!',
+        });
+      }
+
+      if (!conferenceAuthorsUserIds.includes(userId)) {
+        return res.status(403).json({ message: 'User is not an author in this conference.' });
+      }
+
+      console.log(req);
+
+      const fileName = req.file.originalname;
+      const paperBytes = req.file.buffer;
+
+      if (req.file.mimetype !== 'application/pdf') {
+        return res.status(400).json({ message: 'Only PDF files are allowed.' });
+      }
+
+      if (req.file.size > 3 * MEGABYTE_IN_BYTES) {
+        return res.status(400).json({ message: 'File size exceeds the 3MB limit.' });
+      }
+
+      const nextPaperVersionNumber = paper.paper_versions.length + 1;
+
+      const result = await prisma.$transaction(async (prisma) => {
+        const paperVersion = await prisma.paper_versions.create({
+          data: {
+            paper_id: paper.id,
+            version_number: nextPaperVersionNumber,
+            file_name: fileName,
+            file_contents: paperBytes,
+          },
+        });
+
+        await prisma.papers.update({
+          where: { id: paper.id },
+          data: {
+            status: PAPER_STATUS_NOT_REVIEWED,
+          },
+        });
+
+        return { paperVersion };
+      });
+
+      const { paperVersion } = result;
+      return res.status(201).json({ paperVersion });
+    } catch (error) {
+      return res.status(500).json({ message: 'Server error.', error: error.message });
+    }
+  },
+];
+
 exports.approvePaper = async (req, res) => {
   try {
     const conferenceId = req.params?.conferenceId;
@@ -169,8 +282,6 @@ exports.approvePaper = async (req, res) => {
         },
       },
     });
-
-    console.log(conference);
 
     if (!conference) {
       return res
@@ -216,12 +327,10 @@ exports.approvePaper = async (req, res) => {
     });
 
     if (doesReviewAlreadyExist) {
-      return res
-        .status(400)
-        .json({
-          message:
-            'You have already submitted a review for this paper version. Please wait for your fellow reviewers to also submit their reviews, or for another version of the paper',
-        });
+      return res.status(400).json({
+        message:
+          'You have already submitted a review for this paper version. Please wait for your fellow reviewers to also submit their reviews, or for another version of the paper',
+      });
     }
 
     const result = await prisma.$transaction(async (prisma) => {
@@ -270,6 +379,164 @@ exports.approvePaper = async (req, res) => {
 
     const { review } = result;
     return res.status(201).json({ review });
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error.', error: error.message });
+  }
+};
+
+exports.requestChangesForPaper = async (req, res) => {
+  try {
+    const conferenceId = req.params?.conferenceId;
+    const paperId = req.params?.paperId;
+
+    if (!conferenceId || !paperId) {
+      return res.status(400).json({ message: 'Missing conferenceId or paperId parameter.' });
+    }
+
+    const userId = req?.user?.id;
+
+    const { paperVersion, comments } = req.body;
+
+    if (!paperVersion) {
+      return res.status(400).json({ message: 'Please provide a paper version' });
+    }
+
+    if (!comments || !(typeof comments === 'string') || comments.trim().length < 5) {
+      return res.status(400).json({
+        message:
+          'You cannot request changes without providing a description of the changes that is at least 5 characeters long.',
+      });
+    }
+
+    const conference = await prisma.conferences.findUnique({
+      where: { id: Number(conferenceId) },
+      include: {
+        conference_reviewers: {
+          where: {
+            reviewer_id: userId,
+          },
+        },
+        papers: {
+          where: { id: Number(paperId) },
+          include: {
+            paper_versions: {
+              where: {
+                version_number: Number(paperVersion),
+              },
+            },
+            paper_reviewers: {
+              include: {
+                conference_reviewers: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!conference) {
+      return res
+        .status(400)
+        .json({ message: 'Provided conference id does not match any conference' });
+    }
+
+    if (conference.papers.length < 1) {
+      return res.status(400).json({ message: 'This conference has no papers' });
+    }
+
+    if (!conference.conference_reviewers.map((cr) => cr.reviewer_id).includes(userId)) {
+      return res.status(400).json({
+        message:
+          'You are not a reviewer in this conference. Please contact the conference organizer if you think this is wrong',
+      });
+    }
+
+    if (
+      !conference.papers[0].paper_reviewers
+        .map((pr) => pr.conference_reviewers.reviewer_id)
+        .includes(userId)
+    ) {
+      return res.status(400).json({
+        message: 'You are not assigned as a reviewer for this paper.',
+      });
+    }
+    const relevantConferenceReviewer = await prisma.conference_reviewers.findFirst({
+      where: {
+        conference_id: conference.id,
+        reviewer_id: userId,
+      },
+      include: {
+        paper_reviewers: true,
+      },
+    });
+
+    const doesReviewAlreadyExist = await prisma.reviews.findFirst({
+      where: {
+        paper_reviewer_entry_id: relevantConferenceReviewer.paper_reviewers[0].id,
+        paper_version_id: conference.papers[0].paper_versions[0].id,
+      },
+    });
+
+    if (doesReviewAlreadyExist) {
+      return res.status(400).json({
+        message:
+          'You have already submitted a review for this paper version. Please wait for your fellow reviewers to also submit their reviews, or for another version of the paper',
+      });
+    }
+
+    const result = await prisma.$transaction(async (prisma) => {
+      const review = await prisma.reviews.create({
+        data: {
+          paper_reviewer_entry_id: relevantConferenceReviewer.paper_reviewers[0].id,
+          paper_version_id: conference.papers[0].paper_versions[0].id,
+          decision: REVIEW_DECISION_CHANGES_REQUESTED,
+        },
+      });
+
+      await prisma.papers.update({
+        where: { id: conference.papers[0].id },
+        data: {
+          status: PAPER_STATUS_CHANGES_REQUESTED,
+        },
+      });
+
+      return { review };
+    });
+
+    const { review } = result;
+    return res.status(201).json({ review });
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error.', error: error.message });
+  }
+};
+
+exports.seePaperStatuses = async (req, res) => {
+  try {
+    const conferenceId = req.params?.conferenceId;
+
+    if (!conferenceId) {
+      return res.status(400).json({ message: 'Missing conferenceId parameter.' });
+    }
+
+    const conference = await prisma.conferences.findUnique({
+      where: { id: Number(conferenceId) },
+      include: {
+        papers: {
+          select: {
+            title: true,
+            status: true,
+          },
+        },
+      },
+    });
+
+    if (conference.organizer_id !== req.user.id) {
+      return res
+        .status(403)
+        .json({ message: 'Only the conference organizer can see paper statuses.' });
+    }
+
+    return res.status(200).json({ papers: conference.papers });
   } catch (error) {
     return res.status(500).json({ message: 'Server error.', error: error.message });
   }

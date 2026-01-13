@@ -53,13 +53,14 @@ model paper_reviewers {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model paper_versions {
-  id             Int      @id @default(autoincrement())
+  id             Int       @id @default(autoincrement())
   paper_id       Int
   version_number Int
-  file_name      String   @db.VarChar
+  file_name      String    @db.VarChar
   file_contents  Bytes
-  created_at     DateTime @default(now()) @db.Timestamptz(6)
-  papers         papers   @relation(fields: [paper_id], references: [id], onDelete: Cascade)
+  created_at     DateTime  @default(now()) @db.Timestamptz(6)
+  papers         papers    @relation(fields: [paper_id], references: [id], onDelete: Cascade)
+  reviews        reviews[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -74,7 +75,6 @@ model papers {
   paper_versions  paper_versions[]
   users           users             @relation(fields: [author_id], references: [id], onDelete: Cascade)
   conferences     conferences       @relation(fields: [conference_id], references: [id], onDelete: Cascade)
-  reviews         reviews[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -86,7 +86,7 @@ model reviews {
   comments                String?
   created_at              DateTime         @default(now()) @db.Timestamptz(6)
   paper_reviewers         paper_reviewers? @relation(fields: [paper_reviewer_entry_id], references: [id], onDelete: Cascade)
-  papers                  papers           @relation(fields: [paper_version_id], references: [id], onDelete: Cascade)
+  papers                  paper_versions   @relation(fields: [paper_version_id], references: [id], onDelete: Cascade)
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.

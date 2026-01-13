@@ -18,14 +18,29 @@ const { authenticateToken } = require('./middleware/loginUser');
 const requireRole = require('./middleware/requireRole');
 
 const { ORGANIZER_ROLE, AUTHOR_ROLE, REVIEWER_ROLE } = require('./constants/roles');
+const { AuthError } = require('@supabase/supabase-js');
 
 const app = express();
 
 // app.use(cors())
-app.use(express.json());
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 const PORT = process.env.PORT || 6666;
+
+app.post(
+  '/conferences/:conferenceId/submit-paper',
+  authenticateToken,
+  requireRole(AUTHOR_ROLE),
+  papersController.submitPaper
+);
+app.post(
+  '/conferences/:conferenceId/papers/:paperId/upload-new-paper-version',
+  authenticateToken,
+  requireRole(AUTHOR_ROLE),
+  papersController.submitNewVersionOfPaper
+);
+
+app.use(express.json());
 
 app.get('/users', usersController.getUsers);
 
@@ -54,11 +69,11 @@ app.post(
   conferencesController.joinConferenceAsAuthor
 );
 
-app.post(
-  '/conferences/:conferenceId/submit-paper',
+app.get(
+  '/conferences/:conferenceId/see-paper-statuses',
   authenticateToken,
-  requireRole(AUTHOR_ROLE),
-  papersController.submitPaper
+  requireRole(ORGANIZER_ROLE),
+  papersController.seePaperStatuses
 );
 
 app.post(
@@ -67,8 +82,14 @@ app.post(
   requireRole(REVIEWER_ROLE),
   papersController.approvePaper
 );
+app.post(
+  '/conferences/:conferenceId/papers/:paperId/request-changes',
+  authenticateToken,
+  requireRole(REVIEWER_ROLE),
+  papersController.requestChangesForPaper
+);
 
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.send('Serverul backend functioneaza corect!');
 });
 

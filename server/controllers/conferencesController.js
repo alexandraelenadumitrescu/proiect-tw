@@ -13,7 +13,6 @@ exports.createConference = async (req, res) => {
   }
 
   try {
-    console.log(req.user);
     const conference = await prisma.conferences.create({
       data: {
         name,
