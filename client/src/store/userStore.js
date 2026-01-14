@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 import { jwtDecode } from 'jwt-decode';
 
 const useUserStore = create((set) => ({
@@ -7,8 +7,11 @@ const useUserStore = create((set) => ({
     const decoded = jwtDecode(token);
     const { id, email, roles } = decoded;
     let rolesArray = [];
-    if (typeof roles === "string") {
-      rolesArray = roles.trim().split(",").map(r => r.trim());
+    if (typeof roles === 'string') {
+      rolesArray = roles
+        .trim()
+        .split(',')
+        .map((r) => r.trim());
     }
     set({ user: { id, email, roles: rolesArray } });
   },

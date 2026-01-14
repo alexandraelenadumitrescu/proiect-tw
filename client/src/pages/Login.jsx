@@ -1,14 +1,14 @@
-import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { LOGIN_URL } from "@/urls";
-import { LOGIN_ROUTE } from "@/routes";
-import { toast } from 'sonner'
-import axios from "axios";
-import useUserStore from "@/store/userStore";
+import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { LOGIN_URL } from '@/urls';
+import { LOGIN_ROUTE } from '@/routes';
+import { toast } from 'sonner';
+import axios from 'axios';
+import useUserStore from '@/store/userStore';
 
 async function loginUser({ email, password }) {
   const res = await axios.post(LOGIN_URL, { email, password });
@@ -16,7 +16,7 @@ async function loginUser({ email, password }) {
 }
 
 export default function Login() {
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ email: '', password: '' });
   const setUserFromToken = useUserStore((s) => s.setUserFromToken);
   const logout = useUserStore((s) => s.logout);
   const user = useUserStore((s) => s.user);
@@ -27,12 +27,12 @@ export default function Login() {
     mutationFn: loginUser,
     onSuccess: (data) => {
       setUserFromToken(data.token);
-      toast.success("Login successful!");
-      localStorage.setItem("token", data.token);
-      setTimeout(() => navigate("/dashboard"), 2000);
+      toast.success('Login successful!');
+      localStorage.setItem('token', data.token);
+      setTimeout(() => navigate('/dashboard'), 2000);
     },
     onError: () => {
-      toast.error("Login failed");
+      toast.error('Login failed');
     },
   });
 
@@ -48,8 +48,8 @@ export default function Login() {
   function handleLogout() {
     logout();
     queryClient.clear();
-    localStorage.removeItem("token");
-    toast("Logged out");
+    localStorage.removeItem('token');
+    toast('Logged out');
     navigate(LOGIN_ROUTE);
   }
 
@@ -78,7 +78,7 @@ export default function Login() {
               required
             />
             <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? "Logging in..." : "Login"}
+              {mutation.isPending ? 'Logging in...' : 'Login'}
             </Button>
           </form>
         ) : (

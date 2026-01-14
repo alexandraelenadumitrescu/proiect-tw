@@ -3,14 +3,14 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from "@/components/ui/sonner"
+import { Toaster } from '@/components/ui/sonner';
 import useUserStore from '@/store/userStore';
 
 const queryClient = new QueryClient();
 
 function App() {
   const setUserFromToken = useUserStore((s) => s.setUserFromToken);
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem('token');
   if (token) {
     setUserFromToken(token);
   }
@@ -20,9 +20,15 @@ function App() {
       <Toaster />
       <div className="p-4">
         <nav className="mb-4 flex gap-4">
-          <Link to="/dashboard" className="btn btn-primary">Dashboard</Link>
-          <Link to="/login" className="btn btn-secondary">Login</Link>
-          <Link to="/register" className="btn btn-accent">Register</Link>
+          <Link to="/dashboard" className="btn btn-primary">
+            Dashboard
+          </Link>
+          <Link to="/login" className="btn btn-secondary">
+            Login
+          </Link>
+          <Link to="/register" className="btn btn-accent">
+            Register
+          </Link>
         </nav>
         <Routes>
           <Route path="/dashboard" element={<Dashboard />} />
