@@ -3,12 +3,14 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from "@/components/ui/sonner"
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <Toaster />
       <div className="p-4">
         <nav className="mb-4 flex gap-4">
           <Link to="/dashboard" className="btn btn-primary">Dashboard</Link>

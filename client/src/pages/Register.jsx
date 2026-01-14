@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { REGISTER_URL } from "../urls";
 import { toast } from "sonner";
 
-async function registerUser({ name, email, password }) {
+async function registerUser({ email, password }) {
   const res = await axios.post(REGISTER_URL, { email, password });
   return res.data;
 }
@@ -20,8 +20,8 @@ export default function Register() {
   const mutation = useMutation({
     mutationFn: registerUser,
     onSuccess: () => {
-      toast({
-        title: "Registration successful!",
+      toast.success(
+        "Registration successful!", {
         description: "Redirecting to login...",
         duration: 2 * 1000,
       });
