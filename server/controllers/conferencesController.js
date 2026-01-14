@@ -146,3 +146,12 @@ exports.joinConferenceAsAuthor = async (req, res) => {
     return res.status(500).json({ message: 'Server error.', error: error.message });
   }
 };
+
+exports.getConferencesAccordingToRole = async (req, res) => {
+  try {
+    // fetch all conferences, with reviewers
+    const conferences = await prirmsa.conferences.findMany({});
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error.', error: error.message });
+  }
+};

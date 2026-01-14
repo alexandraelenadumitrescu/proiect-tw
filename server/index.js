@@ -1,5 +1,5 @@
 const express = require('express');
-// const cors = require('cors')
+const cors = require('cors');
 
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
@@ -18,14 +18,19 @@ const { authenticateToken } = require('./middleware/loginUser');
 const requireRole = require('./middleware/requireRole');
 
 const { ORGANIZER_ROLE, AUTHOR_ROLE, REVIEWER_ROLE } = require('./constants/roles');
-const { AuthError } = require('@supabase/supabase-js');
 
 const app = express();
 
-// app.use(cors())
+app.use(
+  cors({
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true,
+  })
+);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-const PORT = process.env.PORT || 6666;
+const PORT = process.env.PORT || 7878;
 
 app.post(
   '/conferences/:conferenceId/submit-paper',
@@ -49,6 +54,8 @@ app.post('/register', registrationController.registerUser);
 
 app.get('/users/:userId/roles', rolesController.getRolesForUser);
 app.post('/users/assign-roles-to-self', authenticateToken, rolesController.assignRoleToUser);
+
+app.get('/conferences', authenticateToken, conferencesController.getConferencesAccordingToRole);
 
 app.post(
   '/conferences',
