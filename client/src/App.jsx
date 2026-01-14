@@ -5,6 +5,8 @@ import Register from './pages/Register';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import useUserStore from '@/store/userStore';
+import SelfAssignRoles from './pages/SelfAssignRoles';
+import { DASHBOARD_ROUTE, LOGIN_ROUTE, REGISTER_ROUTE, SELF_ASSIGN_ROLES_ROUTE } from './routes';
 
 const queryClient = new QueryClient();
 
@@ -20,20 +22,21 @@ function App() {
       <Toaster />
       <div className="p-4">
         <nav className="mb-4 flex gap-4">
-          <Link to="/dashboard" className="btn btn-primary">
+          <Link to={DASHBOARD_ROUTE} className="btn btn-primary">
             Dashboard
           </Link>
-          <Link to="/login" className="btn btn-secondary">
+          <Link to={LOGIN_ROUTE} className="btn btn-secondary">
             Login
           </Link>
-          <Link to="/register" className="btn btn-accent">
+          <Link to={REGISTER_ROUTE} className="btn btn-accent">
             Register
           </Link>
         </nav>
         <Routes>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path={DASHBOARD_ROUTE} element={<Dashboard />} />
+          <Route path={LOGIN_ROUTE} element={<Login />} />
+          <Route path={REGISTER_ROUTE} element={<Register />} />
+          <Route path={SELF_ASSIGN_ROLES_ROUTE} element={<SelfAssignRoles />} />
         </Routes>
       </div>
     </QueryClientProvider>
