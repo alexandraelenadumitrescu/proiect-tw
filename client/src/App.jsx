@@ -4,10 +4,17 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/sonner"
+import useUserStore from '@/store/userStore';
 
 const queryClient = new QueryClient();
 
 function App() {
+  const setUserFromToken = useUserStore((s) => s.setUserFromToken);
+  const token = localStorage.getItem("token");
+  if (token) {
+    setUserFromToken(token);
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <Toaster />

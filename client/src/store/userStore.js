@@ -1,10 +1,10 @@
 import { create } from "zustand";
-import jwt_decode from "jwt-decode";
+import { jwtDecode } from 'jwt-decode';
 
-export const useUserStore = create((set) => ({
+const useUserStore = create((set) => ({
   user: null,
   setUserFromToken: (token) => {
-    const decoded = jwt_decode(token);
+    const decoded = jwtDecode(token);
     const { id, email, roles } = decoded;
     let rolesArray = [];
     if (typeof roles === "string") {
@@ -14,3 +14,5 @@ export const useUserStore = create((set) => ({
   },
   logout: () => set({ user: null }),
 }));
+
+export default useUserStore;
