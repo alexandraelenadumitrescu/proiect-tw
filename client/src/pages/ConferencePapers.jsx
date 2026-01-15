@@ -81,6 +81,11 @@ export default function ConferencePapers() {
               {data.papers.map((paper, idx) => (
                 <PaperCard key={idx} paper={paper} conferenceId={conferenceId} paperId={paper.id} />
               ))}
+              {!data?.papers?.length && !isLoading && !error && (
+                <div className="text-center text-gray-500 py-8">
+                  No papers found for this conference.
+                </div>
+              )}
             </div>
           )}
         </CardContent>

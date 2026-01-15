@@ -8,12 +8,37 @@ import { FaArrowRight } from 'react-icons/fa';
 import { makeAuthHeaders } from '@/lib/utils';
 import { CONFERENCE_PAPERS_ROUTE } from '@/routes';
 import UserAvatar from '../components/UserAvatar';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import axios from 'axios';
+import { JOIN_AS_AUTHOR_URL } from '@/urls';
 
 function ConferenceCard({ conference }) {
   const navigate = useNavigate();
 
-  function handleJoinOrView() {
+  function redirectToConference() {
     navigate(CONFERENCE_PAPERS_ROUTE(conference.id));
+  }
+
+  const joinAsAuthorMutation = useMutation({
+    mutationFn: async () => {
+      await axios.post(JOIN_AS_AUTHOR_URL(conference.id), null, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+    },
+    onSuccess: () => {
+      toast.success('Joined as Author!');
+      navigate(CONFERENCE_PAPERS_ROUTE(conference.id));
+    },
+    onError: () => {
+      toast.error('Error');
+    },
+  });
+
+  function handleJoinAsAuthor() {
+    joinAsAuthorMutation.mutate();
   }
 
   return (
@@ -50,9 +75,9 @@ function ConferenceCard({ conference }) {
           </div>
 
           {conference.canJoinAsAuthor ? (
-            <Button onClick={handleJoinOrView}>Join as Author</Button>
+            <Button onClick={handleJoinAsAuthor} disabled={joinAsAuthorMutation.isLoading}>Join as Author</Button>
           ) : (
-            <Button variant="secondary" onClick={handleJoinOrView}>
+            <Button variant="secondary" onClick={redirectToConference}>
               <FaArrowRight className="mr-2" />
               View Conference
             </Button>
@@ -73,8 +98,6 @@ export default function Conferences() {
       return res.json();
     },
   });
-
-  console.log(data);
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl mx-auto">

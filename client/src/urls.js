@@ -14,3 +14,4 @@ export const PAPER_TIMELINE_URL = (conferenceId, paperId) =>
 
 export const DOWNLOAD_PAPER_VERSION_URL = (conferenceId, paperId, versionNumber) =>
   `${BACKEND_URL}/conferences/${conferenceId}/papers/${paperId}/versions/${versionNumber}/download`;
+export const JOIN_AS_AUTHOR_URL = (conferenceId) => `${BACKEND_URL}/conferences/${conferenceId}/join-as-author`;
