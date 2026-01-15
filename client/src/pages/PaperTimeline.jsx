@@ -23,7 +23,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ROLES } from '../constants/roles';
 import React from 'react';
 import { REVIEW_APPROVE, REVIEW_REQUEST_CHANGES } from '@/urls';
-import { ALLOCATE_REVIEWER_URL } from '@/urls';
 
 function ReviewerActions({ conferenceId, paperId, paperVersions }) {
   const [selectedVersion, setSelectedVersion] = React.useState(
@@ -134,74 +133,6 @@ function ReviewerActions({ conferenceId, paperId, paperVersions }) {
           {(approveMutation.isError || requestChangesMutation.isError) && (
             <div className="text-red-500 text-sm mb-1">
               Failed to submit review.
-            </div>
-          )}
-          {success && <div className="text-green-600 text-sm mb-1">{success}</div>}
-        </FieldGroup>
-      </FieldSet>
-    </form>
-  );
-}
-
-
-function OrganizerActions({ conferenceId }) {
-  const [email, setEmail] = React.useState('');
-  const [success, setSuccess] = React.useState('');
-  const queryClient = useQueryClient();
-  const token = localStorage.getItem('token');
-
-  const inviteMutation = useMutation({
-    mutationFn: async (email) => {
-      return axios.post(
-        ALLOCATE_REVIEWER_URL(conferenceId),
-        { email },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-    },
-    onSuccess: () => {
-      setSuccess('Reviewer invited successfully.');
-      setEmail('');
-      queryClient.invalidateQueries(['paper-timeline', conferenceId]);
-    },
-    onError: () => {
-      setSuccess('');
-    },
-  });
-
-  return (
-    <form className="border rounded p-4 mb-6 bg-gray-50" onSubmit={e => { e.preventDefault(); }}>
-      <FieldSet>
-        <FieldLegend>Invite Reviewer</FieldLegend>
-        <FieldDescription>Invite a reviewer to this conference by email.</FieldDescription>
-        <FieldGroup>
-          <Field>
-            <FieldLabel htmlFor="reviewer-email">Reviewer Email</FieldLabel>
-            <input
-              id="reviewer-email"
-              type="email"
-              className="border rounded px-2 py-1 w-full"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="reviewer@example.com"
-              required
-            />
-          </Field>
-          <div className="flex gap-2 mt-4 mb-2">
-            <Button
-              onClick={() => inviteMutation.mutate(email)}
-              disabled={inviteMutation.isLoading || !email}
-              type="button"
-            >
-              Invite Reviewer
-            </Button>
-          </div>
-          {inviteMutation.isError && (
-            <div className="text-red-500 text-sm mb-1">
-              Failed to invite reviewer.
             </div>
           )}
           {success && <div className="text-green-600 text-sm mb-1">{success}</div>}
