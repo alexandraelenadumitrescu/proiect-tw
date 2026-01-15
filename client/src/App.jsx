@@ -6,7 +6,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import useUserStore from '@/store/userStore';
 import SelfAssignRoles from './pages/SelfAssignRoles';
-import { CONFERENCES_ROUTE, DASHBOARD_ROUTE, LOGIN_ROUTE, REGISTER_ROUTE, SELF_ASSIGN_ROLES_ROUTE } from './routes';
+import {
+  CONFERENCES_ROUTE,
+  DASHBOARD_ROUTE,
+  LOGIN_ROUTE,
+  REGISTER_ROUTE,
+  SELF_ASSIGN_ROLES_ROUTE,
+} from './routes';
 import Conferences from './pages/Conferences';
 import ConferencePapers from './pages/ConferencePapers';
 import PaperTimeline from './pages/PaperTimeline';
@@ -42,7 +48,10 @@ function App() {
           <Route path={SELF_ASSIGN_ROLES_ROUTE} element={<SelfAssignRoles />} />
           <Route path={CONFERENCES_ROUTE} element={<Conferences />} />
           <Route path="/conferences/:conferenceId/papers" element={<ConferencePapers />} />
-          <Route path="/conferences/:conferenceId/papers/:paperId/timeline" element={<PaperTimeline />} />
+          <Route
+            path="/conferences/:conferenceId/papers/:paperId/timeline"
+            element={<PaperTimeline />}
+          />
         </Routes>
       </div>
     </QueryClientProvider>

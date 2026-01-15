@@ -57,14 +57,11 @@ export default function ConferencePapers() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['conference-papers', conferenceId],
     queryFn: async () => {
-      const res = await fetch(
-        SEE_PAPER_STATUSES_URL(conferenceId),
-        {
-          headers: {
-            ...makeAuthHeaders(),
-          },
-        }
-      );
+      const res = await fetch(SEE_PAPER_STATUSES_URL(conferenceId), {
+        headers: {
+          ...makeAuthHeaders(),
+        },
+      });
       if (!res.ok) throw new Error('Failed to fetch papers');
       return res.json();
     },
@@ -82,12 +79,7 @@ export default function ConferencePapers() {
           {data && data.papers && (
             <div className="flex flex-col gap-4">
               {data.papers.map((paper, idx) => (
-                <PaperCard
-                  key={idx}
-                  paper={paper}
-                  conferenceId={conferenceId}
-                  paperId={idx}
-                />
+                <PaperCard key={idx} paper={paper} conferenceId={conferenceId} paperId={idx} />
               ))}
             </div>
           )}
