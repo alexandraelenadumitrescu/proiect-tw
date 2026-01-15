@@ -198,8 +198,6 @@ exports.submitNewVersionOfPaper = [
         return res.status(403).json({ message: 'User is not an author in this conference.' });
       }
 
-      console.log(req);
-
       const fileName = req.file.originalname;
       const paperBytes = req.file.buffer;
 

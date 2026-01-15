@@ -46,36 +46,42 @@ function ConferenceCard({ conference }) {
       <CardHeader>
         <div className="flex gap-2 items-center">
           <CardTitle>{conference.name}</CardTitle>
-          {!conference.canJoinAsAuthor ? <div>
-            <RoleBadge role={conference.userRoleInThisConference} />
-          </div> : null}
+          {!conference.canJoinAsAuthor ? (
+            <div>
+              <RoleBadge role={conference.userRoleInThisConference} />
+            </div>
+          ) : null}
         </div>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
-            <p className='font-semibold'>Reviewers in this conference:</p>
+            <p className="font-semibold">Reviewers in this conference:</p>
             <div className="*:data-[slot=avatar]:ring-background flex -space-x-2 *:data-[slot=avatar]:ring-2 *:data-[slot=avatar]:grayscale">
-              {conference.conferenceReviewerEmails.map(e =>
+              {conference.conferenceReviewerEmails.map((e) => (
                 <UserAvatar email={e} />
-              )}
+              ))}
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <p className='font-semibold'>Authors in this conference:</p>
+            <p className="font-semibold">Authors in this conference:</p>
             <div className="*:data-[slot=avatar]:ring-background flex -space-x-2 *:data-[slot=avatar]:ring-2 *:data-[slot=avatar]:grayscale">
-              {conference.conferenceAuthorEmails.slice(0, 5).map(e =>
+              {conference.conferenceAuthorEmails.slice(0, 5).map((e) => (
                 <UserAvatar email={e} />
-              )}
+              ))}
             </div>
             {conference.conferenceAuthorEmails.length > 5 ? (
-              <p className='font-semibold'>... and {conference.conferenceAuthorEmails.length - 5} others</p>
+              <p className="font-semibold">
+                ... and {conference.conferenceAuthorEmails.length - 5} others
+              </p>
             ) : null}
           </div>
 
           {conference.canJoinAsAuthor ? (
-            <Button onClick={handleJoinAsAuthor} disabled={joinAsAuthorMutation.isLoading}>Join as Author</Button>
+            <Button onClick={handleJoinAsAuthor} disabled={joinAsAuthorMutation.isLoading}>
+              Join as Author
+            </Button>
           ) : (
             <Button variant="secondary" onClick={redirectToConference}>
               <FaArrowRight className="mr-2" />

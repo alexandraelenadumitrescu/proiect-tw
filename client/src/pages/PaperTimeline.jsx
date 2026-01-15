@@ -18,7 +18,13 @@ import {
 } from '@/components/ui/field';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from '@/components/ui/select';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ROLES } from '../constants/roles';
 import React from 'react';
@@ -27,7 +33,7 @@ import { SUBMIT_NEW_VERSION_OF_PAPER_URL } from '../urls';
 
 function ReviewerActions({ conferenceId, paperId, paperVersions }) {
   const [selectedVersion, setSelectedVersion] = React.useState(
-    paperVersions.length > 0 ? String(paperVersions[0].version_number) : ''
+    paperVersions.length > 0 ? String(paperVersions[0].version_number) : '',
   );
   const [comments, setComments] = React.useState('');
   const [success, setSuccess] = React.useState('');
@@ -35,7 +41,7 @@ function ReviewerActions({ conferenceId, paperId, paperVersions }) {
 
   const token = localStorage.getItem('token');
 
-  // Import these at the top: 
+  // Import these at the top:
   // import { REVIEW_APPROVE, REVIEW_REQUEST_CHANGES } from '@/urls';
 
   const approveMutation = useMutation({
@@ -47,7 +53,7 @@ function ReviewerActions({ conferenceId, paperId, paperVersions }) {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
     },
     onSuccess: () => {
@@ -69,7 +75,7 @@ function ReviewerActions({ conferenceId, paperId, paperVersions }) {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
     },
     onSuccess: () => {
@@ -83,7 +89,12 @@ function ReviewerActions({ conferenceId, paperId, paperVersions }) {
   });
 
   return (
-    <form className="border rounded p-4 mb-6 bg-gray-50" onSubmit={e => { e.preventDefault(); }}>
+    <form
+      className="border rounded p-4 mb-6 bg-gray-50"
+      onSubmit={(e) => {
+        e.preventDefault();
+      }}
+    >
       <FieldSet>
         <FieldLegend>Reviewer Actions</FieldLegend>
         <FieldDescription>Select a paper version and approve or request changes.</FieldDescription>
@@ -95,7 +106,7 @@ function ReviewerActions({ conferenceId, paperId, paperVersions }) {
                 <SelectValue placeholder="Select version" />
               </SelectTrigger>
               <SelectContent>
-                {paperVersions.map(v => (
+                {paperVersions.map((v) => (
                   <SelectItem key={v.version_number} value={String(v.version_number)}>
                     Version {v.version_number}: {v.file_name}
                   </SelectItem>
@@ -107,7 +118,7 @@ function ReviewerActions({ conferenceId, paperId, paperVersions }) {
             <FieldLabel>Comments (for requesting changes)</FieldLabel>
             <Textarea
               value={comments}
-              onChange={e => setComments(e.target.value)}
+              onChange={(e) => setComments(e.target.value)}
               rows={3}
               placeholder="Enter comments for requesting changes"
             />
@@ -132,9 +143,7 @@ function ReviewerActions({ conferenceId, paperId, paperVersions }) {
             </Button>
           </div>
           {(approveMutation.isError || requestChangesMutation.isError) && (
-            <div className="text-red-500 text-sm mb-1">
-              Failed to submit review.
-            </div>
+            <div className="text-red-500 text-sm mb-1">Failed to submit review.</div>
           )}
           {success && <div className="text-green-600 text-sm mb-1">{success}</div>}
         </FieldGroup>
@@ -142,7 +151,6 @@ function ReviewerActions({ conferenceId, paperId, paperVersions }) {
     </form>
   );
 }
-
 
 function AuthorActions({ conferenceId, paperId }) {
   const [file, setFile] = React.useState(null);
@@ -155,16 +163,12 @@ function AuthorActions({ conferenceId, paperId }) {
     mutationFn: async (file) => {
       const formData = new FormData();
       formData.append('file', file);
-      return axios.post(
-        SUBMIT_NEW_VERSION_OF_PAPER_URL(conferenceId, paperId),
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
+      return axios.post(SUBMIT_NEW_VERSION_OF_PAPER_URL(conferenceId, paperId), formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
     },
     onSuccess: () => {
       setSuccess('New version uploaded successfully.');
@@ -208,17 +212,11 @@ function AuthorActions({ conferenceId, paperId }) {
             <FieldDescription>Choose the new version file to upload.</FieldDescription>
           </Field>
           <div className="flex gap-2 mt-4 mb-2">
-            <Button
-              type="submit"
-              disabled={!file || submitMutation.isLoading}
-              variant="primary"
-            >
+            <Button type="submit" disabled={!file || submitMutation.isLoading} variant="primary">
               Upload New Version
             </Button>
           </div>
-          {submitMutation.isError && (
-            <div className="text-red-500 text-sm mb-1">{error}</div>
-          )}
+          {submitMutation.isError && <div className="text-red-500 text-sm mb-1">{error}</div>}
           {success && <div className="text-green-600 text-sm mb-1">{success}</div>}
         </FieldGroup>
       </FieldSet>
@@ -231,13 +229,14 @@ function FileDownload({ conferenceId, paperId, versionNumber, fileName }) {
     const url = DOWNLOAD_PAPER_VERSION_URL(conferenceId, paperId, versionNumber);
     const token = localStorage.getItem('token');
 
-    axios.get(url, {
-      responseType: 'blob',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then(res => {
+    axios
+      .get(url, {
+        responseType: 'blob',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => {
         const link = document.createElement('a');
         link.href = window.URL.createObjectURL(res.data);
         link.download = fileName;
@@ -344,8 +343,6 @@ export default function PaperTimeline() {
     },
   });
 
-  console.log(data);
-
   return (
     <div className="flex flex-col gap-6 max-w-2xl mx-auto">
       <Card>
@@ -366,11 +363,19 @@ export default function PaperTimeline() {
         </CardContent>
       </Card>
 
-      {data && data.userRoleInThisConference === ROLES.REVIEWER && data.canPerformRoleSpecificAction ? (
-        <ReviewerActions conferenceId={data.paper.conference_id} paperId={data.paper.id} paperVersions={data.paper.paper_versions} />
+      {data &&
+      data.userRoleInThisConference === ROLES.REVIEWER &&
+      data.canPerformRoleSpecificAction ? (
+        <ReviewerActions
+          conferenceId={data.paper.conference_id}
+          paperId={data.paper.id}
+          paperVersions={data.paper.paper_versions}
+        />
       ) : null}
 
-      {data && data.userRoleInThisConference === ROLES.AUTHOR && data.canPerformRoleSpecificAction ? (
+      {data &&
+      data.userRoleInThisConference === ROLES.AUTHOR &&
+      data.canPerformRoleSpecificAction ? (
         <AuthorActions conferenceId={data.paper.conference_id} paperId={data.paper.id} />
       ) : null}
     </div>

@@ -39,16 +39,12 @@ function AuthorActions({ conferenceId }) {
       formData.append('title', title);
       formData.append('file', file);
 
-      return axios.post(
-        SUBMIT_PAPER_URL(conferenceId),
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
+      return axios.post(SUBMIT_PAPER_URL(conferenceId), formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
     },
     onSuccess: () => {
       setSuccess('Paper submitted successfully.');
@@ -64,7 +60,7 @@ function AuthorActions({ conferenceId }) {
   return (
     <form
       className="border rounded p-4 mb-6 bg-gray-50"
-      onSubmit={e => {
+      onSubmit={(e) => {
         e.preventDefault();
         if (title && file) {
           submitMutation.mutate({ title, file });
@@ -82,7 +78,7 @@ function AuthorActions({ conferenceId }) {
               type="text"
               className="border rounded px-2 py-1 w-full"
               value={title}
-              onChange={e => setTitle(e.target.value)}
+              onChange={(e) => setTitle(e.target.value)}
               placeholder="Paper Title"
               required
             />
@@ -94,23 +90,18 @@ function AuthorActions({ conferenceId }) {
               type="file"
               accept="application/pdf"
               className="border rounded px-2 py-1 w-full"
-              onChange={e => setFile(e.target.files[0])}
+              onChange={(e) => setFile(e.target.files[0])}
               required
             />
             <FieldDescription>Upload your paper as a PDF file.</FieldDescription>
           </Field>
           <div className="flex gap-2 mt-4 mb-2">
-            <Button
-              type="submit"
-              disabled={submitMutation.isLoading || !title || !file}
-            >
+            <Button type="submit" disabled={submitMutation.isLoading || !title || !file}>
               Submit Paper
             </Button>
           </div>
           {submitMutation.isError && (
-            <div className="text-red-500 text-sm mb-1">
-              Failed to submit paper.
-            </div>
+            <div className="text-red-500 text-sm mb-1">Failed to submit paper.</div>
           )}
           {success && <div className="text-green-600 text-sm mb-1">{success}</div>}
         </FieldGroup>
@@ -134,7 +125,7 @@ function OrganizerActions({ conferenceId }) {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
     },
     onSuccess: () => {
@@ -148,7 +139,12 @@ function OrganizerActions({ conferenceId }) {
   });
 
   return (
-    <form className="border rounded p-4 mb-6 bg-gray-50" onSubmit={e => { e.preventDefault(); }}>
+    <form
+      className="border rounded p-4 mb-6 bg-gray-50"
+      onSubmit={(e) => {
+        e.preventDefault();
+      }}
+    >
       <FieldSet>
         <FieldLegend>Invite Reviewer</FieldLegend>
         <FieldDescription>Invite a reviewer to this conference by email.</FieldDescription>
@@ -160,7 +156,7 @@ function OrganizerActions({ conferenceId }) {
               type="email"
               className="border rounded px-2 py-1 w-full"
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="reviewer@example.com"
               required
             />
@@ -175,9 +171,7 @@ function OrganizerActions({ conferenceId }) {
             </Button>
           </div>
           {inviteMutation.isError && (
-            <div className="text-red-500 text-sm mb-1">
-              Failed to invite reviewer.
-            </div>
+            <div className="text-red-500 text-sm mb-1">Failed to invite reviewer.</div>
           )}
           {success && <div className="text-green-600 text-sm mb-1">{success}</div>}
         </FieldGroup>
@@ -238,7 +232,6 @@ export default function ConferencePapers() {
       return res.json();
     },
   });
-  console.log(conferenceId);
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl mx-auto">
@@ -263,13 +256,9 @@ export default function ConferencePapers() {
           )}
         </CardContent>
       </Card>
-      {data && data.canSeeAllPapers ? (
-        <OrganizerActions conferenceId={conferenceId} />
-      ) : null}
+      {data && data.canSeeAllPapers ? <OrganizerActions conferenceId={conferenceId} /> : null}
 
-      {data && data.canSubmitANewPaper ? (
-        <AuthorActions conferenceId={conferenceId} />
-      ) : null}
+      {data && data.canSubmitANewPaper ? <AuthorActions conferenceId={conferenceId} /> : null}
     </div>
   );
 }
