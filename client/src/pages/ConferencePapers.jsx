@@ -67,6 +67,8 @@ export default function ConferencePapers() {
     },
   });
 
+  console.log(data);
+
   return (
     <div className="flex flex-col gap-6 max-w-2xl mx-auto">
       <Card>
@@ -79,7 +81,7 @@ export default function ConferencePapers() {
           {data && data.papers && (
             <div className="flex flex-col gap-4">
               {data.papers.map((paper, idx) => (
-                <PaperCard key={idx} paper={paper} conferenceId={conferenceId} paperId={idx} />
+                <PaperCard key={idx} paper={paper} conferenceId={conferenceId} paperId={paper.id} />
               ))}
             </div>
           )}

@@ -43,7 +43,6 @@ function FileDownload({ conferenceId, paperId, versionNumber, fileName }) {
 }
 
 function TimelineItem({ version, conferenceId }) {
-  console.log('version is', version);
   return (
     <div className="flex items-start gap-4 mb-8 w-full">
       <div className="flex flex-col items-center">
