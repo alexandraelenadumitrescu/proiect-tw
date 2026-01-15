@@ -527,6 +527,7 @@ exports.seePaperStatuses = async (req, res) => {
         conference_reviewers: true,
         papers: {
           select: {
+            id: true,
             author_id: true,
             title: true,
             status: true,
