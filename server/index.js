@@ -83,6 +83,12 @@ app.get(
   papersController.seePaperStatuses
 );
 
+app.get(
+  '/conferences/:conferenceId/papers/:paperId/versions/:versionNumber/download',
+  authenticateToken,
+  papersController.downloadPaperVersionFile
+);
+
 app.post(
   '/conferences/:conferenceId/papers/:paperId/approve',
   authenticateToken,
@@ -101,6 +107,7 @@ app.get(
   authenticateToken,
   papersController.getPaperTimeline
 );
+
 
 app.get('/', (_req, res) => {
   res.send('Serverul backend functioneaza corect!');

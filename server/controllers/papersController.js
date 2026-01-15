@@ -638,7 +638,6 @@ exports.getPaperTimeline = async (req, res) => {
           ? REVIEWER_ROLE
           : AUTHOR_ROLE;
 
-
     const paperICareAbout = conference.papers.find((p) => p.id === Number(paperId));
 
     // TODO: this is a travesty
@@ -647,19 +646,24 @@ exports.getPaperTimeline = async (req, res) => {
       // cannot leave a review if the paper has been approved already
       if (paperICareAbout.status !== PAPER_STATUS_APPROVED) {
         // you can only leave a review if you have not left a review yet
-        const conferenceReviewerEntryId = conference.conference_reviewers.find(cr => cr.reviewer_id === req.user.id).id;
+        const conferenceReviewerEntryId = conference.conference_reviewers.find(
+          (cr) => cr.reviewer_id === req.user.id
+        ).id;
 
         const paperReviewerEntry = await prisma.paper_reviewers.findFirst({
           where: {
             paper_id: paperICareAbout.id,
             conference_reviewer_entry_id: conferenceReviewerEntryId,
-          }
+          },
         });
 
         const paperReviewerEntryId = paperReviewerEntry.id;
 
-        const lastPaperVersion = paperICareAbout.paper_versions[paperICareAbout.paper_versions.length - 1];
-        const lastPaperVersionReviewsByMe = lastPaperVersion.reviews.filter(r => r.paper_reviewer_entry_id === paperReviewerEntryId);
+        const lastPaperVersion =
+          paperICareAbout.paper_versions[paperICareAbout.paper_versions.length - 1];
+        const lastPaperVersionReviewsByMe = lastPaperVersion.reviews.filter(
+          (r) => r.paper_reviewer_entry_id === paperReviewerEntryId
+        );
 
         canPerformRoleSpecificAction = lastPaperVersionReviewsByMe.length === 0;
       }
@@ -667,7 +671,65 @@ exports.getPaperTimeline = async (req, res) => {
       canPerformRoleSpecificAction = paperICareAbout.status === PAPER_STATUS_CHANGES_REQUESTED;
     }
 
-    return res.status(200).json({ userRoleInThisConference, canPerformRoleSpecificAction, paper: paperICareAbout });
+    return res
+      .status(200)
+      .json({ userRoleInThisConference, canPerformRoleSpecificAction, paper: paperICareAbout });
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error.', error: error.message });
+  }
+};
+
+exports.downloadPaperVersionFile = async (req, res) => {
+  try {
+    const conferenceId = req.params.conferenceId;
+    const paperId = req.params.paperId;
+    const versionNumber = req.params.versionNumber;
+
+    if (!conferenceId || !paperId || !versionNumber) {
+      return res
+        .status(400)
+        .json({ message: 'Missing conferenceId, paperId, or versionNumber parameter.' });
+    }
+
+    const conference = await prisma.conferences.findUnique({
+      where: { id: Number(conferenceId) },
+      include: {
+        conference_authors: true,
+        conference_reviewers: true,
+      },
+    });
+
+    if (!conference) {
+      return res.status(404).json({ message: 'Conference not found.' });
+    }
+
+    const userId = req.user.id;
+    const isOrganizer = conference.organizer_id === userId;
+    const isReviewer = conference.conference_reviewers.some((cr) => cr.reviewer_id === userId);
+    const isAuthor = conference.conference_authors.some((ca) => ca.author_id === userId);
+
+    if (!(isOrganizer || isReviewer || isAuthor)) {
+      return res.status(403).json({ message: 'You are not authorized to download this file.' });
+    }
+
+    const paperVersion = await prisma.paper_versions.findFirst({
+      where: {
+        paper_id: Number(paperId),
+        version_number: Number(versionNumber),
+      },
+      select: {
+        file_contents: true,
+        file_name: true,
+      },
+    });
+
+    if (!paperVersion) {
+      return res.status(404).json({ message: 'Paper version not found.' });
+    }
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${paperVersion.file_name}"`);
+    return res.send(paperVersion.file_contents);
   } catch (error) {
     return res.status(500).json({ message: 'Server error.', error: error.message });
   }
