@@ -8,6 +8,139 @@ import { PAPER_TIMELINE_URL } from '@/urls';
 import { FaDownload } from 'react-icons/fa';
 import { DOWNLOAD_PAPER_VERSION_URL } from '../urls';
 import axios from 'axios';
+import {
+  Field,
+  FieldLabel,
+  FieldDescription,
+  FieldSet,
+  FieldGroup,
+  FieldLegend,
+} from '@/components/ui/field';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { ROLES } from '../constants/roles';
+import React from 'react';
+import { REVIEW_APPROVE, REVIEW_REQUEST_CHANGES } from '@/urls';
+
+function ReviewerActions({ conferenceId, paperId, paperVersions }) {
+  const [selectedVersion, setSelectedVersion] = React.useState(
+    paperVersions.length > 0 ? String(paperVersions[0].version_number) : ''
+  );
+  const [comments, setComments] = React.useState('');
+  const [success, setSuccess] = React.useState('');
+  const queryClient = useQueryClient();
+
+  const token = localStorage.getItem('token');
+
+  // Import these at the top: 
+  // import { REVIEW_APPROVE, REVIEW_REQUEST_CHANGES } from '@/urls';
+
+  const approveMutation = useMutation({
+    mutationFn: async (version) => {
+      return axios.post(
+        REVIEW_APPROVE(conferenceId, paperId),
+        { paperVersion: Number(version) },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    },
+    onSuccess: () => {
+      setSuccess('Paper version approved successfully.');
+      setComments('');
+      queryClient.invalidateQueries(['paper-timeline', conferenceId, paperId]);
+    },
+    onError: () => {
+      setSuccess('');
+    },
+  });
+
+  const requestChangesMutation = useMutation({
+    mutationFn: async ({ version, comments }) => {
+      return axios.post(
+        REVIEW_REQUEST_CHANGES(conferenceId, paperId),
+        { paperVersion: Number(version), comments },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    },
+    onSuccess: () => {
+      setSuccess('Requested changes successfully.');
+      setComments('');
+      queryClient.invalidateQueries(['paper-timeline', conferenceId, paperId]);
+    },
+    onError: () => {
+      setSuccess('');
+    },
+  });
+
+  return (
+    <form className="border rounded p-4 mb-6 bg-gray-50" onSubmit={e => { e.preventDefault(); }}>
+      <FieldSet>
+        <FieldLegend>Reviewer Actions</FieldLegend>
+        <FieldDescription>Select a paper version and approve or request changes.</FieldDescription>
+        <FieldGroup>
+          <Field>
+            <FieldLabel>Select Paper Version</FieldLabel>
+            <Select value={selectedVersion} onValueChange={setSelectedVersion}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select version" />
+              </SelectTrigger>
+              <SelectContent>
+                {paperVersions.map(v => (
+                  <SelectItem key={v.version_number} value={String(v.version_number)}>
+                    Version {v.version_number}: {v.file_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field>
+            <FieldLabel>Comments (for requesting changes)</FieldLabel>
+            <Textarea
+              value={comments}
+              onChange={e => setComments(e.target.value)}
+              rows={3}
+              placeholder="Enter comments for requesting changes"
+            />
+            <FieldDescription>Required only when requesting changes.</FieldDescription>
+          </Field>
+          <div className="flex gap-2 mt-4 mb-2">
+            <Button
+              onClick={() => approveMutation.mutate(selectedVersion)}
+              disabled={approveMutation.isLoading}
+              type="button"
+              variant="success"
+            >
+              Approve
+            </Button>
+            <Button
+              onClick={() => requestChangesMutation.mutate({ version: selectedVersion, comments })}
+              disabled={requestChangesMutation.isLoading || !comments}
+              type="button"
+              variant="destructive"
+            >
+              Request Changes
+            </Button>
+          </div>
+          {(approveMutation.isError || requestChangesMutation.isError) && (
+            <div className="text-red-500 text-sm mb-1">
+              Failed to submit review.
+            </div>
+          )}
+          {success && <div className="text-green-600 text-sm mb-1">{success}</div>}
+        </FieldGroup>
+      </FieldSet>
+    </form>
+  );
+}
 
 function FileDownload({ conferenceId, paperId, versionNumber, fileName }) {
   function handleDownload() {
@@ -127,6 +260,8 @@ export default function PaperTimeline() {
     },
   });
 
+  console.log(data);
+
   return (
     <div className="flex flex-col gap-6 max-w-2xl mx-auto">
       <Card>
@@ -146,6 +281,9 @@ export default function PaperTimeline() {
           )}
         </CardContent>
       </Card>
+      {data && data.userRoleInThisConference === ROLES.REVIEWER && data.canPerformRoleSpecificAction ? (
+        <ReviewerActions conferenceId={data.paper.conference_id} paperId={data.paper.id} paperVersions={data.paper.paper_versions} />
+      ) : null}
     </div>
   );
 }
