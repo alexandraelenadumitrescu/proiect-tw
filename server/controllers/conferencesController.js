@@ -1,5 +1,5 @@
 const prisma = require('../config/shared.js');
-const { REVIEWER_ROLE } = require('../constants/roles.js');
+const { REVIEWER_ROLE, AUTHOR_ROLE } = require('../constants/roles.js');
 
 exports.createConference = async (req, res) => {
   const { name } = req.body;
@@ -149,8 +149,27 @@ exports.joinConferenceAsAuthor = async (req, res) => {
 
 exports.getConferencesAccordingToRole = async (req, res) => {
   try {
-    // fetch all conferences, with reviewers
-    const conferences = await prirmsa.conferences.findMany({});
+    const conferences = await prisma.conferences.findMany({
+      include: { conference_reviewers: true, conference_authors: true },
+    });
+
+    const userId = req.user.id;
+
+    const response = conferences.map(c => {
+      const conferenceOrganizerUserId = c.organizer_id;
+      const conferenceReviewerUserIds = c.conference_reviewers.map(cr => cr.reviewer_id);
+      const conferenceAuthorsUserIds = c.conference_authors.map(ca => ca.author_id);
+
+      const canJoinAsAuthor = (conferenceOrganizerUserId !== userId) && (!conferenceAuthorsUserIds.includes(userId)) && (!conferenceReviewerUserIds.includes(userId));
+
+      return {
+        id: c.id,
+        name: c.name,
+        canJoinAsAuthor,
+      }
+    })
+
+    return res.status(200).json({ conferences: response });
   } catch (error) {
     return res.status(500).json({ message: 'Server error.', error: error.message });
   }
