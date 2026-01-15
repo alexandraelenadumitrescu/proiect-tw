@@ -549,7 +549,9 @@ exports.seePaperStatuses = async (req, res) => {
     const canSeeAllPapers =
       conference.organizer_id === req.user.id || conferenceReviewersUserIds.includes(req.user.id);
 
-    const papersToReturn = !canSeeAllPapers ? conference.papers.filter((p) => p.author_id === req.user.id) : conference.papers;
+    const papersToReturn = !canSeeAllPapers
+      ? conference.papers.filter((p) => p.author_id === req.user.id)
+      : conference.papers;
 
     const canSubmitANewPaper = conferenceAuthorsUserIds.includes(req.user.id);
 
