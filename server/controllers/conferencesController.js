@@ -152,6 +152,7 @@ exports.getConferencesAccordingToRole = async (req, res) => {
     const conferences = await prisma.conferences.findMany({
       select: {
         id: true,
+        organizer_id: true,
         name: true,
         users: true, // This fetches the organizer's user object
         conference_reviewers: { include: { users: true } },

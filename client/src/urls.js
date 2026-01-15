@@ -18,3 +18,5 @@ export const JOIN_AS_AUTHOR_URL = (conferenceId) => `${BACKEND_URL}/conferences/
 
 export const REVIEW_APPROVE = (conferenceId, paperId) => `${BACKEND_URL}/conferences/${conferenceId}/papers/${paperId}/approve`;
 export const REVIEW_REQUEST_CHANGES = (conferenceId, paperId) => `${BACKEND_URL}/conferences/${conferenceId}/papers/${paperId}/request-changes`;
+export const ALLOCATE_REVIEWER_URL = (conferenceId) =>
+  `${BACKEND_URL}/conferences/${conferenceId}/allocate-reviewer`;
