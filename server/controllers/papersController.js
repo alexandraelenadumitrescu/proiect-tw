@@ -521,6 +521,8 @@ exports.seePaperStatuses = async (req, res) => {
     const conference = await prisma.conferences.findUnique({
       where: { id: Number(conferenceId) },
       include: {
+        conference_authors: true,
+        conference_reviewers: true,
         papers: {
           select: {
             title: true,
@@ -530,10 +532,15 @@ exports.seePaperStatuses = async (req, res) => {
       },
     });
 
-    if (conference.organizer_id !== req.user.id) {
+    const conferenceReviewersUserIds = conference.conference_reviewers.map((cr) => cr.reviewer_id);
+    const conferenceAuthorsUserIds = conference.conference_authors.map((ca) => ca.author_id);
+
+    const canSeePaperStatuses = (conference.organizer_id === req.user.id) || (conferenceReviewersUserIds.includes(req.user.id)) || (conferenceAuthorsUserIds.includes(req.user.id));
+
+    if (!canSeePaperStatuses) {
       return res
         .status(403)
-        .json({ message: 'Only the conference organizer can see paper statuses.' });
+        .json({ message: 'You are not part of this conference' });
     }
 
     return res.status(200).json({ papers: conference.papers });
