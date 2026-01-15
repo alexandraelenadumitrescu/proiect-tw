@@ -11,6 +11,7 @@ import {
 } from '@/constants/papers';
 import { Badge } from '@/components/ui/badge';
 import { PAPER_STATUS_APPROVED } from '../constants/papers';
+import { PAPER_TIMELINE_ROUTE } from '@/routes';
 
 function StatusBadge({ status }) {
   if (status === PAPER_STATUS_NOT_REVIEWED) {
