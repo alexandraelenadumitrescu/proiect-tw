@@ -490,6 +490,7 @@ exports.requestChangesForPaper = async (req, res) => {
           paper_reviewer_entry_id: relevantConferenceReviewer.paper_reviewers[0].id,
           paper_version_id: conference.papers[0].paper_versions[0].id,
           decision: REVIEW_DECISION_CHANGES_REQUESTED,
+          comments: comments,
         },
       });
 
@@ -497,7 +498,6 @@ exports.requestChangesForPaper = async (req, res) => {
         where: { id: conference.papers[0].id },
         data: {
           status: PAPER_STATUS_CHANGES_REQUESTED,
-          comments,
         },
       });
 
