@@ -1,7 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { SELF_ASSIGN_ROLES_ROUTE, SEE_CONFERENCES_ROUTE } from '@/routes';
+import { SELF_ASSIGN_ROLES_ROUTE, CONFERENCES_ROUTE } from '@/routes';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -11,7 +11,7 @@ export default function Dashboard() {
   }
 
   function handleSeeConferences() {
-    navigate(SEE_CONFERENCES_ROUTE);
+    navigate(CONFERENCES_ROUTE);
   }
 
   return (

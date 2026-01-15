@@ -6,3 +6,5 @@ export const REGISTER_ROUTE = '/register';
 export const SELF_ASSIGN_ROLES_ROUTE = '/self-assign-roles';
 
 export const SEE_CONFERENCES_ROUTE = '/conferences';
+export const CONFERENCES_ROUTE = '/conferences';
+export const CONFERENCE_ROUTE = (conferenceId) => `/conferences/${conferenceId}`;

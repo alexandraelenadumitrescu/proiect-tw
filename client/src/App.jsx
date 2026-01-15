@@ -6,7 +6,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import useUserStore from '@/store/userStore';
 import SelfAssignRoles from './pages/SelfAssignRoles';
-import { DASHBOARD_ROUTE, LOGIN_ROUTE, REGISTER_ROUTE, SELF_ASSIGN_ROLES_ROUTE } from './routes';
+import { CONFERENCES_ROUTE, DASHBOARD_ROUTE, LOGIN_ROUTE, REGISTER_ROUTE, SELF_ASSIGN_ROLES_ROUTE } from './routes';
+import Conferences from './pages/Conferences';
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ function App() {
           <Route path={LOGIN_ROUTE} element={<Login />} />
           <Route path={REGISTER_ROUTE} element={<Register />} />
           <Route path={SELF_ASSIGN_ROLES_ROUTE} element={<SelfAssignRoles />} />
+          <Route path={CONFERENCES_ROUTE} element={<Conferences />} />
         </Routes>
       </div>
     </QueryClientProvider>
