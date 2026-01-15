@@ -1,4 +1,5 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import useUserStore from '@/store/userStore';
 import RoleBadge from '@/components/RoleBadge';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
@@ -12,7 +13,71 @@ import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { JOIN_AS_AUTHOR_URL } from '@/urls';
+import { CREATE_CONFERENCE_URL } from '../urls';
+import React from 'react';
+import { useQueryClient } from "@tanstack/react-query";
 
+function CreateConferenceForm() {
+  const [name, setName] = React.useState('');
+  const [success, setSuccess] = React.useState('');
+  const [error, setError] = React.useState('');
+  const queryClient = useQueryClient();
+  const token = localStorage.getItem('token');
+
+  const createMutation = useMutation({
+    mutationFn: async (name) => {
+      return axios.post(
+        CREATE_CONFERENCE_URL,
+        { name },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    },
+    onSuccess: () => {
+      setSuccess('Conference created successfully.');
+      setError('');
+      setName('');
+      queryClient.invalidateQueries(['conferences']);
+    },
+    onError: () => {
+      setSuccess('');
+      setError('Failed to create conference.');
+    },
+  });
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (name.trim()) {
+      createMutation.mutate(name);
+    }
+  }
+
+  return (
+    <form className="border rounded p-4 mb-6 bg-gray-50" onSubmit={handleSubmit}>
+      <div className="mb-2 font-semibold">Create New Conference</div>
+      <input
+        type="text"
+        value={name}
+        onChange={e => setName(e.target.value)}
+        placeholder="Conference name"
+        className="block w-full border px-2 py-1 mb-2 rounded"
+      />
+      <Button
+        type="submit"
+        disabled={!name.trim() || createMutation.isLoading}
+      >
+        Create
+      </Button>
+      {createMutation.isError && (
+        <div className="text-red-500 text-sm mt-1">{error}</div>
+      )}
+      {success && <div className="text-green-600 text-sm mt-1">{success}</div>}
+    </form>
+  );
+}
 function ConferenceCard({ conference }) {
   const navigate = useNavigate();
 
@@ -105,6 +170,9 @@ export default function Conferences() {
     },
   });
 
+  const user = useUserStore((state) => state.user);
+  const isUserOrganizer = user?.roles.includes('organizer');
+
   return (
     <div className="flex flex-col gap-6 max-w-2xl mx-auto">
       <Card>
@@ -123,6 +191,7 @@ export default function Conferences() {
           )}
         </CardContent>
       </Card>
+      {isUserOrganizer ? (<CreateConferenceForm />) : null}
     </div>
   );
 }

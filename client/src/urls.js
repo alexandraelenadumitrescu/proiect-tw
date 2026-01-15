@@ -28,3 +28,5 @@ export const SUBMIT_PAPER_URL = (conferenceId) =>
   `${BACKEND_URL}/conferences/${conferenceId}/submit-paper`;
 export const SUBMIT_NEW_VERSION_OF_PAPER_URL = (conferenceId, paperId) =>
   `${BACKEND_URL}/conferences/${conferenceId}/papers/${paperId}/upload-new-paper-version`;
+
+export const CREATE_CONFERENCE_URL = `${BACKEND_URL}/conferences`;
