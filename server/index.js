@@ -100,7 +100,7 @@ app.get(
   '/conferences/:conferenceId/papers/:paperId/timeline',
   authenticateToken,
   papersController.getPaperTimeline
-)
+);
 
 app.get('/', (_req, res) => {
   res.send('Serverul backend functioneaza corect!');

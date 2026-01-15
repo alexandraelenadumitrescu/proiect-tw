@@ -155,19 +155,22 @@ exports.getConferencesAccordingToRole = async (req, res) => {
 
     const userId = req.user.id;
 
-    const response = conferences.map(c => {
+    const response = conferences.map((c) => {
       const conferenceOrganizerUserId = c.organizer_id;
-      const conferenceReviewerUserIds = c.conference_reviewers.map(cr => cr.reviewer_id);
-      const conferenceAuthorsUserIds = c.conference_authors.map(ca => ca.author_id);
+      const conferenceReviewerUserIds = c.conference_reviewers.map((cr) => cr.reviewer_id);
+      const conferenceAuthorsUserIds = c.conference_authors.map((ca) => ca.author_id);
 
-      const canJoinAsAuthor = (conferenceOrganizerUserId !== userId) && (!conferenceAuthorsUserIds.includes(userId)) && (!conferenceReviewerUserIds.includes(userId));
+      const canJoinAsAuthor =
+        conferenceOrganizerUserId !== userId &&
+        !conferenceAuthorsUserIds.includes(userId) &&
+        !conferenceReviewerUserIds.includes(userId);
 
       return {
         id: c.id,
         name: c.name,
         canJoinAsAuthor,
-      }
-    })
+      };
+    });
 
     return res.status(200).json({ conferences: response });
   } catch (error) {

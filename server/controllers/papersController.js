@@ -1,6 +1,7 @@
 const prisma = require('../config/shared.js');
 const multer = require('multer');
 const upload = multer();
+const { REVIEWER_ROLE, ORGANIZER_ROLE, AUTHOR_ROLE } = require('../constants/roles.js');
 
 const {
   PAPER_STATUS_DEFAULT,
@@ -537,19 +538,23 @@ exports.seePaperStatuses = async (req, res) => {
     const conferenceReviewersUserIds = conference.conference_reviewers.map((cr) => cr.reviewer_id);
     const conferenceAuthorsUserIds = conference.conference_authors.map((ca) => ca.author_id);
 
-    const canSeePaperStatuses = (conference.organizer_id === req.user.id) || (conferenceReviewersUserIds.includes(req.user.id)) || (conferenceAuthorsUserIds.includes(req.user.id));
+    const canSeePaperStatuses =
+      conference.organizer_id === req.user.id ||
+      conferenceReviewersUserIds.includes(req.user.id) ||
+      conferenceAuthorsUserIds.includes(req.user.id);
 
     if (!canSeePaperStatuses) {
-      return res
-        .status(403)
-        .json({ message: 'You are not part of this conference' });
+      return res.status(403).json({ message: 'You are not part of this conference' });
     }
 
-    const canSeeAllPapers = (conference.organizer_id === req.user.id) || (conferenceReviewersUserIds.includes(req.user.id));
+    const canSeeAllPapers =
+      conference.organizer_id === req.user.id || conferenceReviewersUserIds.includes(req.user.id);
     if (canSeeAllPapers) {
       return res.status(200).json({ papers: conference.papers });
     } else {
-      return res.status(200).json({ papers: conference.papers.filter(p => p.author_id === req.user.id) });
+      return res
+        .status(200)
+        .json({ papers: conference.papers.filter((p) => p.author_id === req.user.id) });
     }
   } catch (error) {
     return res.status(500).json({ message: 'Server error.', error: error.message });
@@ -571,12 +576,12 @@ exports.getPaperTimeline = async (req, res) => {
         conference_reviewers: {
           select: {
             reviewer_id: true,
-          }
+          },
         },
         conference_authors: {
           select: {
             author_id: true,
-          }
+          },
         },
         papers: {
           include: {
@@ -597,18 +602,18 @@ exports.getPaperTimeline = async (req, res) => {
                         conference_reviewers: {
                           include: {
                             users: true,
-                          }
+                          },
                         },
-                      }
+                      },
                     },
-                  }
+                  },
                 },
-              }
+              },
             },
-          }
-        }
-      }
-    })
+          },
+        },
+      },
+    });
 
     if (!conference) {
       return res.status(404).json({ message: 'Conference not found.' });
@@ -617,17 +622,53 @@ exports.getPaperTimeline = async (req, res) => {
     const conferenceReviewersUserIds = conference.conference_reviewers.map((cr) => cr.reviewer_id);
     const conferenceAuthorsUserIds = conference.conference_authors.map((ca) => ca.author_id);
 
-    const isPartOfConference = conferenceReviewersUserIds.includes(req.user.id) || conferenceAuthorsUserIds.includes(req.user.id) || (conference.organizer_id === req.user.id);
+    const isPartOfConference =
+      conferenceReviewersUserIds.includes(req.user.id) ||
+      conferenceAuthorsUserIds.includes(req.user.id) ||
+      conference.organizer_id === req.user.id;
 
     if (!isPartOfConference) {
       return res.status(403).json({ message: 'You are not part of this conference.' });
     }
 
-    const paperICareAbout = conference.papers.find(p => p.id === Number(paperId));
-    return res.status(200).json({ paper: paperICareAbout });
+    const userRoleInThisConference =
+      req.user.id === conference.organizer_id
+        ? ORGANIZER_ROLE
+        : conferenceReviewersUserIds.includes(req.user.id)
+          ? REVIEWER_ROLE
+          : AUTHOR_ROLE;
 
-    return res.status(200).json({ conference });
+
+    const paperICareAbout = conference.papers.find((p) => p.id === Number(paperId));
+
+    // TODO: this is a travesty
+    let canPerformRoleSpecificAction = false;
+    if (userRoleInThisConference === REVIEWER_ROLE) {
+      // cannot leave a review if the paper has been approved already
+      if (paperICareAbout.status !== PAPER_STATUS_APPROVED) {
+        // you can only leave a review if you have not left a review yet
+        const conferenceReviewerEntryId = conference.conference_reviewers.find(cr => cr.reviewer_id === req.user.id).id;
+
+        const paperReviewerEntry = await prisma.paper_reviewers.findFirst({
+          where: {
+            paper_id: paperICareAbout.id,
+            conference_reviewer_entry_id: conferenceReviewerEntryId,
+          }
+        });
+
+        const paperReviewerEntryId = paperReviewerEntry.id;
+
+        const lastPaperVersion = paperICareAbout.paper_versions[paperICareAbout.paper_versions.length - 1];
+        const lastPaperVersionReviewsByMe = lastPaperVersion.reviews.filter(r => r.paper_reviewer_entry_id === paperReviewerEntryId);
+
+        canPerformRoleSpecificAction = lastPaperVersionReviewsByMe.length === 0;
+      }
+    } else if (userRoleInThisConference === AUTHOR_ROLE) {
+      canPerformRoleSpecificAction = paperICareAbout.status === PAPER_STATUS_CHANGES_REQUESTED;
+    }
+
+    return res.status(200).json({ userRoleInThisConference, canPerformRoleSpecificAction, paper: paperICareAbout });
   } catch (error) {
     return res.status(500).json({ message: 'Server error.', error: error.message });
   }
-}
+};
