@@ -670,6 +670,8 @@ exports.getPaperTimeline = async (req, res) => {
       }
     } else if (userRoleInThisConference === AUTHOR_ROLE) {
       canPerformRoleSpecificAction = paperICareAbout.status === PAPER_STATUS_CHANGES_REQUESTED;
+    } else if (userRoleInThisConference === ORGANIZER_ROLE) {
+      canPerformRoleSpecificAction = true;
     }
 
     return res
