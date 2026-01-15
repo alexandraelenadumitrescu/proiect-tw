@@ -525,6 +525,7 @@ exports.seePaperStatuses = async (req, res) => {
         conference_reviewers: true,
         papers: {
           select: {
+            author_id: true,
             title: true,
             status: true,
           },
@@ -543,7 +544,12 @@ exports.seePaperStatuses = async (req, res) => {
         .json({ message: 'You are not part of this conference' });
     }
 
-    return res.status(200).json({ papers: conference.papers });
+    const canSeeAllPapers = (conference.organizer_id === req.user.id) || (conferenceReviewersUserIds.includes(req.user.id));
+    if (canSeeAllPapers) {
+      return res.status(200).json({ papers: conference.papers });
+    } else {
+      return res.status(200).json({ papers: conference.papers.filter(p => p.author_id === req.user.id) });
+    }
   } catch (error) {
     return res.status(500).json({ message: 'Server error.', error: error.message });
   }

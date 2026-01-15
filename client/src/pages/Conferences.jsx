@@ -2,16 +2,16 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { CONFERENCES_URL } from '@/urls';
-import { CONFERENCE_ROUTE } from '@/routes';
 import { useNavigate } from 'react-router-dom';
 import { FaArrowRight } from 'react-icons/fa';
 import { makeAuthHeaders } from '@/lib/utils';
+import { CONFERENCE_PAPERS_ROUTE } from '@/routes';
 
 function ConferenceCard({ conference }) {
   const navigate = useNavigate();
 
   function handleJoinOrView() {
-    navigate(CONFERENCE_ROUTE(conference.id));
+    navigate(CONFERENCE_PAPERS_ROUTE(conference.id));
   }
 
   return (
