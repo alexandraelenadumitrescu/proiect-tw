@@ -79,7 +79,6 @@ app.post(
 app.get(
   '/conferences/:conferenceId/see-paper-statuses',
   authenticateToken,
-  requireRole(ORGANIZER_ROLE),
   papersController.seePaperStatuses
 );
 

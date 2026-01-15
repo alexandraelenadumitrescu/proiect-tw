@@ -550,13 +550,12 @@ exports.seePaperStatuses = async (req, res) => {
 
     const canSeeAllPapers =
       conference.organizer_id === req.user.id || conferenceReviewersUserIds.includes(req.user.id);
-    if (canSeeAllPapers) {
-      return res.status(200).json({ papers: conference.papers });
-    } else {
-      return res
-        .status(200)
-        .json({ papers: conference.papers.filter((p) => p.author_id === req.user.id) });
-    }
+
+    const papersToReturn = !canSeeAllPapers ? conference.papers.filter((p) => p.author_id === req.user.id) : conference.papers;
+
+    const canSubmitANewPaper = conferenceAuthorsUserIds.includes(req.user.id);
+
+    return res.status(200).json({ papers: papersToReturn, canSeeAllPapers, canSubmitANewPaper });
   } catch (error) {
     return res.status(500).json({ message: 'Server error.', error: error.message });
   }
