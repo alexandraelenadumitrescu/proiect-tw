@@ -108,7 +108,6 @@ app.get(
   papersController.getPaperTimeline
 );
 
-
 app.get('/', (_req, res) => {
   res.send('Serverul backend functioneaza corect!');
 });

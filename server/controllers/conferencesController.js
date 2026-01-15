@@ -1,5 +1,5 @@
 const prisma = require('../config/shared.js');
-const { REVIEWER_ROLE, AUTHOR_ROLE } = require('../constants/roles.js');
+const { REVIEWER_ROLE, DEFAULT_USER_ROLE, ORGANIZER_ROLE } = require('../constants/roles.js');
 
 exports.createConference = async (req, res) => {
   const { name } = req.body;
@@ -150,7 +150,13 @@ exports.joinConferenceAsAuthor = async (req, res) => {
 exports.getConferencesAccordingToRole = async (req, res) => {
   try {
     const conferences = await prisma.conferences.findMany({
-      include: { conference_reviewers: true, conference_authors: true },
+      select: {
+        id: true,
+        name: true,
+        users: true, // This fetches the organizer's user object
+        conference_reviewers: { include: { users: true } },
+        conference_authors: { include: { users: true } },
+      },
     });
 
     const userId = req.user.id;
@@ -165,10 +171,21 @@ exports.getConferencesAccordingToRole = async (req, res) => {
         !conferenceAuthorsUserIds.includes(userId) &&
         !conferenceReviewerUserIds.includes(userId);
 
+      let userRoleInThisConference = DEFAULT_USER_ROLE;
+      if (conferenceOrganizerUserId === userId) {
+        userRoleInThisConference = ORGANIZER_ROLE;
+      } else if (conferenceReviewerUserIds.includes(userId)) {
+        userRoleInThisConference = REVIEWER_ROLE;
+      }
+
       return {
         id: c.id,
         name: c.name,
         canJoinAsAuthor,
+        userRoleInThisConference,
+        organizerEmail: c.users.email,
+        conferenceReviewerEmails: c.conference_reviewers.map((cr) => cr.users.email),
+        conferenceAuthorEmails: c.conference_authors.map((ca) => ca.users.email),
       };
     });
 
