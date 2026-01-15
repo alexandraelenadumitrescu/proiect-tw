@@ -575,6 +575,7 @@ exports.getPaperTimeline = async (req, res) => {
       include: {
         conference_reviewers: {
           select: {
+            id: true,
             reviewer_id: true,
           },
         },

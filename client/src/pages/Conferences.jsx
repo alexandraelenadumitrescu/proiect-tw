@@ -15,7 +15,7 @@ import axios from 'axios';
 import { JOIN_AS_AUTHOR_URL } from '@/urls';
 import { CREATE_CONFERENCE_URL } from '../urls';
 import React from 'react';
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from '@tanstack/react-query';
 
 function CreateConferenceForm() {
   const [name, setName] = React.useState('');
@@ -33,7 +33,7 @@ function CreateConferenceForm() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
     },
     onSuccess: () => {
@@ -61,19 +61,14 @@ function CreateConferenceForm() {
       <input
         type="text"
         value={name}
-        onChange={e => setName(e.target.value)}
+        onChange={(e) => setName(e.target.value)}
         placeholder="Conference name"
         className="block w-full border px-2 py-1 mb-2 rounded"
       />
-      <Button
-        type="submit"
-        disabled={!name.trim() || createMutation.isLoading}
-      >
+      <Button type="submit" disabled={!name.trim() || createMutation.isLoading}>
         Create
       </Button>
-      {createMutation.isError && (
-        <div className="text-red-500 text-sm mt-1">{error}</div>
-      )}
+      {createMutation.isError && <div className="text-red-500 text-sm mt-1">{error}</div>}
       {success && <div className="text-green-600 text-sm mt-1">{success}</div>}
     </form>
   );
@@ -191,7 +186,7 @@ export default function Conferences() {
           )}
         </CardContent>
       </Card>
-      {isUserOrganizer ? (<CreateConferenceForm />) : null}
+      {isUserOrganizer ? <CreateConferenceForm /> : null}
     </div>
   );
 }

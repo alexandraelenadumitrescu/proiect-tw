@@ -260,7 +260,9 @@ export default function ConferencePapers() {
           )}
         </CardContent>
       </Card>
-      {data && data.canSeeAllPapers && isUserOrganizer ? <OrganizerActions conferenceId={conferenceId} /> : null}
+      {data && data.canSeeAllPapers && isUserOrganizer ? (
+        <OrganizerActions conferenceId={conferenceId} />
+      ) : null}
 
       {data && data.canSubmitANewPaper ? <AuthorActions conferenceId={conferenceId} /> : null}
     </div>
