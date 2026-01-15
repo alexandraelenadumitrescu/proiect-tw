@@ -23,6 +23,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ROLES } from '../constants/roles';
 import React from 'react';
 import { REVIEW_APPROVE, REVIEW_REQUEST_CHANGES } from '@/urls';
+import { SUBMIT_NEW_VERSION_OF_PAPER_URL } from '../urls';
 
 function ReviewerActions({ conferenceId, paperId, paperVersions }) {
   const [selectedVersion, setSelectedVersion] = React.useState(
@@ -134,6 +135,89 @@ function ReviewerActions({ conferenceId, paperId, paperVersions }) {
             <div className="text-red-500 text-sm mb-1">
               Failed to submit review.
             </div>
+          )}
+          {success && <div className="text-green-600 text-sm mb-1">{success}</div>}
+        </FieldGroup>
+      </FieldSet>
+    </form>
+  );
+}
+
+
+function AuthorActions({ conferenceId, paperId }) {
+  const [file, setFile] = React.useState(null);
+  const [success, setSuccess] = React.useState('');
+  const [error, setError] = React.useState('');
+  const queryClient = useQueryClient();
+  const token = localStorage.getItem('token');
+
+  const submitMutation = useMutation({
+    mutationFn: async (file) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      return axios.post(
+        SUBMIT_NEW_VERSION_OF_PAPER_URL(conferenceId, paperId),
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+    },
+    onSuccess: () => {
+      setSuccess('New version uploaded successfully.');
+      setError('');
+      setFile(null);
+      queryClient.invalidateQueries(['paper-timeline', conferenceId, paperId]);
+    },
+    onError: () => {
+      setSuccess('');
+      setError('Failed to upload new version.');
+    },
+  });
+
+  function handleFileChange(e) {
+    setFile(e.target.files[0]);
+    setSuccess('');
+    setError('');
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (file) {
+      submitMutation.mutate(file);
+    }
+  }
+
+  return (
+    <form className="border rounded p-4 mb-6 bg-gray-50" onSubmit={handleSubmit}>
+      <FieldSet>
+        <FieldLegend>Author Actions</FieldLegend>
+        <FieldDescription>Upload a new version of your paper.</FieldDescription>
+        <FieldGroup>
+          <Field>
+            <FieldLabel>Upload File</FieldLabel>
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx"
+              onChange={handleFileChange}
+              className="block w-full text-sm text-gray-700"
+            />
+            <FieldDescription>Choose the new version file to upload.</FieldDescription>
+          </Field>
+          <div className="flex gap-2 mt-4 mb-2">
+            <Button
+              type="submit"
+              disabled={!file || submitMutation.isLoading}
+              variant="primary"
+            >
+              Upload New Version
+            </Button>
+          </div>
+          {submitMutation.isError && (
+            <div className="text-red-500 text-sm mb-1">{error}</div>
           )}
           {success && <div className="text-green-600 text-sm mb-1">{success}</div>}
         </FieldGroup>
@@ -281,8 +365,13 @@ export default function PaperTimeline() {
           )}
         </CardContent>
       </Card>
+
       {data && data.userRoleInThisConference === ROLES.REVIEWER && data.canPerformRoleSpecificAction ? (
         <ReviewerActions conferenceId={data.paper.conference_id} paperId={data.paper.id} paperVersions={data.paper.paper_versions} />
+      ) : null}
+
+      {data && data.userRoleInThisConference === ROLES.AUTHOR && data.canPerformRoleSpecificAction ? (
+        <AuthorActions conferenceId={data.paper.conference_id} paperId={data.paper.id} />
       ) : null}
     </div>
   );
