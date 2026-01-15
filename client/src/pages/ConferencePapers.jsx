@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import useUserStore from '@/store/userStore';
 import { useQuery } from '@tanstack/react-query';
 import { makeAuthHeaders } from '@/lib/utils';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -233,6 +234,9 @@ export default function ConferencePapers() {
     },
   });
 
+  const user = useUserStore((state) => state.user);
+  const isUserOrganizer = user?.roles.includes('organizer');
+
   return (
     <div className="flex flex-col gap-6 max-w-2xl mx-auto">
       <Card>
@@ -256,7 +260,7 @@ export default function ConferencePapers() {
           )}
         </CardContent>
       </Card>
-      {data && data.canSeeAllPapers ? <OrganizerActions conferenceId={conferenceId} /> : null}
+      {data && data.canSeeAllPapers && isUserOrganizer ? <OrganizerActions conferenceId={conferenceId} /> : null}
 
       {data && data.canSubmitANewPaper ? <AuthorActions conferenceId={conferenceId} /> : null}
     </div>
